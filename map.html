@@ -145,6 +145,28 @@
     @media (max-width: 480px) {
       .map-stats-bar { display: none; }
     }
+
+    /* Priority badge */
+    .priority-badge {
+      display:inline-flex; align-items:center; gap:3px;
+      padding:2px 8px; border-radius:20px;
+      font-size:0.64rem; font-weight:800;
+      background:linear-gradient(135deg,#4F46E5,#14B8A6);
+      color:white; letter-spacing:0.03em;
+      box-shadow:0 2px 8px rgba(79,70,229,0.25);
+    }
+    /* Boost popup button */
+    .map-boost-btn {
+      display:inline-flex; align-items:center; gap:5px;
+      padding:6px 14px; border-radius:9px;
+      background:linear-gradient(135deg,rgba(20,184,166,0.12),rgba(79,70,229,0.10));
+      border:1.5px solid rgba(20,184,166,0.35);
+      color:var(--accent,#14B8A6); font-size:0.78rem; font-weight:700;
+      cursor:pointer; transition:all 0.2s;
+      font-family:'Inter',sans-serif; margin-top:10px; width:100%;
+      justify-content:center;
+    }
+    .map-boost-btn:hover { background:linear-gradient(135deg,#14B8A6,#4F46E5); color:white; border-color:transparent; }
   </style>
 </head>
 <body>
@@ -274,12 +296,15 @@
 
     list.innerHTML = items.map(c => `
       <div class="complaint-mini" onclick="flyTo(${c.location.lat},${c.location.lng})">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
           <span style="font-size:0.7rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">${c.category}</span>
-          ${c.verified
-            ? '<span style="background:rgba(34,197,94,0.10);color:#15803D;border:1px solid rgba(34,197,94,0.22);padding:1px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;">✓ Verified</span>'
-            : '<span style="background:rgba(239,68,68,0.10);color:#B91C1C;border:1px solid rgba(239,68,68,0.22);padding:1px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;">⚠ Suspicious</span>'
-          }
+          <div style="display:flex;gap:5px;align-items:center;">
+            ${c.boosted ? '<span class="priority-badge">⚡ High Priority</span>' : ''}
+            ${c.verified
+              ? '<span style="background:rgba(34,197,94,0.10);color:#15803D;border:1px solid rgba(34,197,94,0.22);padding:1px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;">✓ Verified</span>'
+              : '<span style="background:rgba(239,68,68,0.10);color:#B91C1C;border:1px solid rgba(239,68,68,0.22);padding:1px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;">⚠ Suspicious</span>'
+            }
+          </div>
         </div>
         <div style="font-weight:700;font-size:0.875rem;margin-bottom:5px;">${c.title}</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--text-muted);">

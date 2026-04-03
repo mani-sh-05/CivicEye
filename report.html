@@ -113,6 +113,127 @@
     #uploadProgressTrack{ background:rgba(79,70,229,.10); border-radius:99px; overflow:hidden; height:5px; }
     #uploadProgressBar  { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--primary),var(--secondary)); transition:width .3s ease; width:0%; }
 
+    /* ── Priority Boost ─────────────────────────────────── */
+    .boost-card {
+      background: linear-gradient(135deg,rgba(79,70,229,0.06),rgba(20,184,166,0.05));
+      border: 1.5px solid rgba(79,70,229,0.18);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      transition: border-color 0.25s ease;
+    }
+    .boost-card:has(.boost-opt input:checked[value="boosted"]) {
+      border-color: rgba(20,184,166,0.50);
+      background: linear-gradient(135deg,rgba(20,184,166,0.08),rgba(79,70,229,0.06));
+    }
+    .boost-header { display:flex; align-items:center; gap:9px; margin-bottom:4px; }
+    .boost-title  { font-size:0.92rem; font-weight:800; color:var(--text-primary); }
+    .boost-badge  { font-size:0.68rem; font-weight:700; padding:2px 8px; border-radius:20px;
+                    background:rgba(79,70,229,0.12); color:var(--secondary); border:1px solid rgba(79,70,229,0.20); }
+    .boost-desc   { font-size:0.79rem; color:var(--text-muted); margin-bottom:14px; line-height:1.55; }
+    .boost-opts   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .boost-opt    { cursor:pointer; }
+    .boost-opt input[type=radio] { display:none; }
+    .boost-opt-box {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 13px 12px;
+      transition: all 0.22s ease;
+      position: relative;
+    }
+    .boost-opt input:checked + .boost-opt-box {
+      border-color: var(--accent);
+      background: rgba(20,184,166,0.08);
+      box-shadow: 0 4px 14px rgba(20,184,166,0.18);
+    }
+    .boost-opt-box:hover { border-color: rgba(79,70,229,0.35); transform:translateY(-1px); }
+    .boost-opt-icon { font-size:1.3rem; margin-bottom:5px; }
+    .boost-opt-label{ font-size:0.82rem; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
+    .boost-opt-price{ font-size:0.75rem; color:var(--text-muted); }
+    .boost-opt input:checked + .boost-opt-box .boost-opt-price { color:var(--accent); font-weight:700; }
+    .boost-check {
+      position:absolute; top:8px; right:8px;
+      width:18px; height:18px; border-radius:50%;
+      background:var(--accent); color:white;
+      display:none; align-items:center; justify-content:center;
+      font-size:0.65rem; font-weight:900;
+    }
+    .boost-opt input:checked + .boost-opt-box .boost-check { display:flex; }
+
+    /* ── High Priority Badge ────────────────────────────── */
+    .priority-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:3px 10px; border-radius:20px;
+      font-size:0.70rem; font-weight:800;
+      background:linear-gradient(135deg,#4F46E5,#14B8A6);
+      color:white;
+      box-shadow:0 3px 10px rgba(79,70,229,0.30);
+      letter-spacing:0.03em;
+    }
+
+    /* ── Post-Submit Modal ──────────────────────────────── */
+    .ps-modal-overlay {
+      position:fixed; inset:0;
+      background:rgba(10,15,40,0.70);
+      backdrop-filter:blur(8px);
+      z-index:5000;
+      display:none; align-items:center; justify-content:center;
+      padding:20px;
+    }
+    .ps-modal-overlay.open { display:flex; }
+    .ps-modal {
+      background:var(--glass-bg,rgba(255,255,255,0.96));
+      backdrop-filter:blur(32px);
+      border:1px solid var(--glass-border);
+      border-radius:26px;
+      padding:40px 36px 32px;
+      max-width:460px; width:100%;
+      box-shadow:0 40px 100px rgba(10,15,40,0.28);
+      position:relative;
+      animation:scaleIn 0.38s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    [data-theme="dark"] .ps-modal { background:rgba(15,23,42,0.94); }
+    .ps-modal-close {
+      position:absolute; top:14px; right:16px;
+      background:none; border:none; font-size:1.3rem;
+      cursor:pointer; color:var(--text-muted);
+      padding:4px 8px; border-radius:8px;
+      transition:background 0.15s;
+    }
+    .ps-modal-close:hover { background:rgba(0,0,0,0.07); }
+    .ps-feature-list { list-style:none; padding:0; margin:14px 0 22px; }
+    .ps-feature-list li { display:flex; align-items:center; gap:9px;
+      font-size:0.86rem; color:var(--text-secondary);
+      padding:5px 0; }
+    .ps-feature-list li::before { content:'✔'; color:var(--accent); font-weight:900; font-size:0.85rem; }
+
+    /* Contractor cards */
+    .contractor-section { margin-top:28px; }
+    .contractor-title  { font-size:0.88rem; font-weight:700; margin-bottom:12px; color:var(--text-secondary); }
+    .contractor-grid   { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+    .contractor-grid::-webkit-scrollbar { display:none; }
+    .contractor-card {
+      flex:0 0 auto; width:130px;
+      background:var(--glass-bg); border:1px solid var(--glass-border);
+      border-radius:14px; padding:14px 12px;
+      text-align:center;
+      transition:all 0.22s ease;
+      cursor:pointer;
+    }
+    .contractor-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); border-color:rgba(79,70,229,0.22); }
+    .contractor-icon  { font-size:1.8rem; margin-bottom:6px; }
+    .contractor-name  { font-size:0.78rem; font-weight:700; margin-bottom:2px; }
+    .contractor-price { font-size:0.70rem; color:var(--text-muted); margin-bottom:8px; }
+    .hire-btn {
+      width:100%; padding:5px 0; border-radius:8px;
+      background:linear-gradient(135deg,rgba(79,70,229,0.12),rgba(20,184,166,0.10));
+      border:1px solid rgba(79,70,229,0.22);
+      color:var(--secondary); font-size:0.72rem; font-weight:700;
+      cursor:pointer; transition:all 0.18s;
+      font-family:'Inter',sans-serif;
+    }
+    .hire-btn:hover { background:var(--secondary); color:white; border-color:var(--secondary); }
+
     /* ── Submit pipeline ───────────────────────────── */
     #submitPipeline { display:none; flex-direction:column; gap:5px; margin-bottom:16px; }
     .pipe-step {
@@ -328,6 +449,36 @@
             </label>
           </div>
 
+          <!-- ⚡ Priority Boost Section -->
+          <div class="boost-card" id="boostCard">
+            <div class="boost-header">
+              <span style="font-size:1.15rem;">⚡</span>
+              <span class="boost-title">Faster Resolution</span>
+              <span class="boost-badge">Optional</span>
+            </div>
+            <p class="boost-desc">Boost your issue for faster visibility and priority handling by the assigned authority.</p>
+            <div class="boost-opts">
+              <label class="boost-opt">
+                <input type="radio" name="boostPlan" value="standard" checked />
+                <div class="boost-opt-box">
+                  <div class="boost-check">✓</div>
+                  <div class="boost-opt-icon">🆓</div>
+                  <div class="boost-opt-label">Standard</div>
+                  <div class="boost-opt-price">Free · Normal queue</div>
+                </div>
+              </label>
+              <label class="boost-opt">
+                <input type="radio" name="boostPlan" value="boosted" />
+                <div class="boost-opt-box">
+                  <div class="boost-check">✓</div>
+                  <div class="boost-opt-icon">⚡</div>
+                  <div class="boost-opt-label">Priority Issue</div>
+                  <div class="boost-opt-price">+ ₹20 · Highlighted</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           <!-- Submit -->
           <button type="submit" class="submit-btn btn-ripple" id="submitBtn">
             🚀 Submit &amp; Verify Report
@@ -390,6 +541,39 @@
         </div>
 
       </div><!-- /sidebar -->
+    </div>
+  </div>
+</div>
+
+<!-- ════ POST-SUBMIT MODAL ════ -->
+<div class="ps-modal-overlay" id="psModalOverlay">
+  <div class="ps-modal">
+    <button class="ps-modal-close" onclick="closePsModal()">✕</button>
+    <div style="text-align:center;margin-bottom:6px;">
+      <div style="font-size:2.2rem;margin-bottom:8px;">🚀</div>
+      <h2 style="font-size:1.35rem;font-weight:900;letter-spacing:-0.02em;margin-bottom:6px;">Boost Your Complaint</h2>
+      <p style="font-size:0.87rem;color:var(--text-muted);line-height:1.6;">Get faster resolution and higher visibility by prioritizing your issue with the admin dashboard.</p>
+    </div>
+    <ul class="ps-feature-list">
+      <li>Highlighted in admin dashboard — seen first</li>
+      <li>Faster response from assigned authority</li>
+      <li>Community visibility boost on the live map</li>
+    </ul>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary btn-ripple" style="width:100%;padding:14px;font-size:1rem;" onclick="handleBoostPayment()">
+        ⚡ Boost for ₹20
+      </button>
+      <button class="btn btn-ghost" style="width:100%;" onclick="closePsModal()">
+        Continue Normally
+      </button>
+    </div>
+
+    <!-- Contractor suggestions -->
+    <div class="contractor-section">
+      <div class="contractor-title">🔧 Nearby Verified Help</div>
+      <div class="contractor-grid" id="contractorGrid">
+        <!-- populated by JS based on category -->
+      </div>
     </div>
   </div>
 </div>
@@ -780,7 +964,19 @@ document.getElementById("reportForm").addEventListener("submit", async function(
       (isValid ? "Both checks passed." : "Flagged for manual review.")
     );
 
-    setTimeout(() => { window.location.href = "tracker.html"; }, 3000);
+    // ── Check if user selected Priority Boost on the form ──
+    const chosenBoost = document.querySelector('input[name="boostPlan"]:checked')?.value;
+    if (chosenBoost === 'boosted') {
+      // Already paid via boost card — confirm and redirect
+      setTimeout(() => {
+        Toast.success('⚡ Priority Boost Active!', 'Your report is now highlighted in the admin dashboard.');
+        window.location.href = 'tracker.html';
+      }, 1500);
+    } else {
+      // Show post-submit modal with boost offer
+      openPsModal(selectedCategory);
+      setTimeout(() => { window.location.href = "tracker.html"; }, 12000);
+    }
 
   } catch (err) {
     console.error("Submission failed:", err);
@@ -808,6 +1004,91 @@ function setBadge(id, type, text) {
 // Description counter
 document.getElementById("issueDesc").addEventListener("input", function() {
   document.getElementById("descCount").textContent = this.value.length;
+});
+
+// ════════════════════════════════════════════════════════════
+// POST-SUBMIT MODAL
+// ════════════════════════════════════════════════════════════
+
+const CONTRACTORS = {
+  "Road":        [
+    { icon:"🛠️", name:"Road Repair",    price:"₹200–₹500", hint:"Pothole & surface" },
+    { icon:"🏗️", name:"Civil Works",    price:"₹300–₹800", hint:"Foundation & walls" },
+    { icon:"🚜", name:"Excavation Pro", price:"₹400–₹1000", hint:"Digging & leveling" }
+  ],
+  "Garbage":     [
+    { icon:"🧹", name:"Cleaner",        price:"₹100–₹250", hint:"Daily sweeping" },
+    { icon:"🚛", name:"Waste Pickup",   price:"₹150–₹350", hint:"Bulk collection" },
+    { icon:"♻️", name:"Recycler",       price:"₹80–₹200",  hint:"E-waste & dry" }
+  ],
+  "Water":       [
+    { icon:"🔧", name:"Plumber",        price:"₹150–₹400", hint:"Pipes & leaks" },
+    { icon:"💧", name:"Borewell Tech",  price:"₹300–₹700", hint:"Drilling & pumps" },
+    { icon:"🛁", name:"Sanitation Pro", price:"₹200–₹500", hint:"Drainage lines" }
+  ],
+  "Electricity": [
+    { icon:"⚡", name:"Electrician",    price:"₹100–₹300", hint:"Wiring & boards" },
+    { icon:"🔌", name:"Inverter Tech",  price:"₹200–₹500", hint:"UPS & batteries" },
+    { icon:"💡", name:"Street Lights",  price:"₹150–₹400", hint:"Pole & fittings" }
+  ],
+  "Drainage":    [
+    { icon:"🚰", name:"Drain Expert",   price:"₹200–₹500", hint:"Blockage clearing" },
+    { icon:"🔧", name:"Plumber",        price:"₹150–₹350", hint:"Pipe repairs" },
+    { icon:"🧹", name:"Cleaner",        price:"₹100–₹200", hint:"Drain cleaning" }
+  ],
+  "Other":       [
+    { icon:"👷", name:"Handyman",       price:"₹100–₹300", hint:"General repairs" },
+    { icon:"🔧", name:"Technician",     price:"₹150–₹400", hint:"Various fixes" },
+    { icon:"📞", name:"Municipal Help", price:"Free",       hint:"Call 1913 helpline" }
+  ]
+};
+
+function openPsModal(category) {
+  const overlay = document.getElementById('psModalOverlay');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Populate contractor cards
+  const workers = CONTRACTORS[category] || CONTRACTORS["Other"];
+  const grid    = document.getElementById('contractorGrid');
+  grid.innerHTML = workers.map(w => `
+    <div class="contractor-card">
+      <div class="contractor-icon">${w.icon}</div>
+      <div class="contractor-name">${w.name}</div>
+      <div class="contractor-price">${w.price}</div>
+      <button class="hire-btn" onclick="handleHire('${w.name}')">Hire Now</button>
+    </div>`).join('');
+}
+
+function closePsModal() {
+  document.getElementById('psModalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  window.location.href = 'tracker.html';
+}
+
+function handleBoostPayment() {
+  // In production: integrate Razorpay / UPI here
+  // For the demo, simulate a payment success
+  const btn = document.querySelector('#psModalOverlay .btn-primary');
+  btn.disabled    = true;
+  btn.textContent = '⌛ Processing payment…';
+  setTimeout(() => {
+    document.getElementById('psModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    Toast.success('⚡ Priority Boost Activated!',
+      'Your complaint is now highlighted. Admin will respond faster.');
+    setTimeout(() => window.location.href = 'tracker.html', 1800);
+  }, 1500);
+}
+
+function handleHire(name) {
+  Toast.info(`📞 Connecting to ${name}…`,
+    'This feature will connect you to a verified local service provider.');
+}
+
+// Close modal on backdrop click
+document.getElementById('psModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closePsModal();
 });
 </script>
 
