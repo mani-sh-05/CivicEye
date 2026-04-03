@@ -1,2 +1,94 @@
 # CivicEye
-CivicEye is a civic intelligence and accountability platform where citizens can report local issues like potholes or broken streetlights using images, location, and descriptions. Unlike traditional systems, each complaint goes through a validation layer that filters spam using rule-based checks, user reputation, and selective moderation. Verified issues are then automatically routed to the correct municipal department for resolution. Authorities update the status and upload proof, while citizens and the community can verify the outcome. The platform also provides a public dashboard with insights like pending issues, delays, and performance, ensuring transparency and accountability in governance.
+## Civic Intelligence and Accountability Platform
+
+CivicEye is a civic engagement platform designed to bridge the gap between citizens and municipal authorities. It enables individuals to report local issues while ensuring transparency, accountability, and efficient resolution through intelligent validation and routing systems.
+
+---
+
+## Features
+
+### Issue Reporting
+Citizens can report problems such as potholes, broken streetlights, and garbage accumulation. Each report includes:
+- Images
+- Location data
+- Descriptions
+
+### Smart Validation System
+Every complaint passes through a validation layer to ensure authenticity and reduce spam:
+- Rule-based filtering
+- User reputation scoring
+- Selective moderation
+
+### Automated Routing
+Verified issues are automatically forwarded to the appropriate municipal department. This reduces manual intervention and improves response time.
+
+### Authority Interaction
+Authorities can update the status of reported issues and upload proof of resolution, maintaining an official record of actions taken.
+
+### Community Verification
+Citizens and community members can verify whether an issue has been properly resolved and provide feedback.
+
+### Public Dashboard
+The platform provides a public dashboard with real-time insights, including:
+- Pending issues
+- Resolution delays
+- Department performance metrics
+
+---
+
+## Objectives
+
+- Improve civic participation
+- Reduce inefficiencies in issue handling
+- Increase transparency in governance
+- Build trust between citizens and authorities
+
+---
+
+## How It Works
+
+1. A user submits a complaint with image, location, and description
+2. The system validates the report using filtering mechanisms
+3. Verified issues are routed to the appropriate department
+4. Authorities resolve the issue and upload proof
+5. The community verifies the resolution
+6. Data is reflected on the public dashboard
+
+---
+
+## Tech Stack
+
+(Modify this section according to your implementation)
+
+- Frontend: HTML, CSS, JavaScript or React
+- Backend: Node.js or Python
+- Database: Firebase or MongoDB
+- APIs: Geolocation and image upload services
+- Authentication: Firebase Auth or JWT
+
+---
+
+## Future Improvements
+
+- AI-based image verification
+- Predictive analytics for identifying issue hotspots
+- Mobile application support
+- Integration with government APIs
+
+---
+
+## Contributing
+
+Contributions are welcome. Fork the repository and submit a pull request for review.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+## Vision
+
+CivicEye aims to build a transparent and accountable civic ecosystem where citizens can actively participate and governance systems are more responsive and efficient.
