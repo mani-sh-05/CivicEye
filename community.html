@@ -210,13 +210,10 @@
   let searchQ   = '';
   const votedSet = new Set();
 
-  const complaints = [
-    ...SampleComplaints,
-    { id:'C007', title:'No Streetlights – Residential Colony', category:'Electricity',
-      description:'Entire residential colony has no street lighting for 2 weeks. Very unsafe at night for children and women.', status:'delayed', verified:true, votes:94, date:'2026-03-18', userName:'Neha Gupta', location:{lat:30.7250,lng:76.7450} },
-    { id:'C008', title:'Overflowing Manhole – Market Area', category:'Drainage',
-      description:'Manhole overflowing causing sewage on road. Major health hazard near vegetable market used daily by 500+ people.', status:'pending', verified:true, votes:71, date:'2026-04-02', userName:'Suresh Patel', location:{lat:30.7100,lng:76.7300} }
-  ];
+  function getComplaints() {
+    if (window.ComplaintsDB) return window.ComplaintsDB.get();
+    return JSON.parse(localStorage.getItem('civic_complaints') || '[]');
+  }
 
   const reporters = [
     { name:'Rajesh Kumar',  reports:14, score:82, badge:'trusted' },
@@ -227,7 +224,7 @@
   ];
 
   function getFiltered() {
-    let data = [...complaints];
+    let data = [...getComplaints()];
     if (catFilter !== 'all') data = data.filter(c => c.category === catFilter);
     if (searchQ) data = data.filter(c =>
       c.title.toLowerCase().includes(searchQ) ||
@@ -295,7 +292,8 @@
       btn.classList.add('voted');
       Toast.success('Voted!', 'Your vote helps prioritize this issue.');
     }
-    const c = complaints.find(x => x.id === id);
+    const dbComplaints = getComplaints();
+    const c = dbComplaints.find(x => x.id === id);
     const delta = votedSet.has(id) ? 1 : -1;
     const countEl = document.getElementById(`vcount-${id}`);
     countEl.textContent = c.votes + delta;

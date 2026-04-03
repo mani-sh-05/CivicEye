@@ -848,75 +848,71 @@ document.getElementById("reportForm").addEventListener("submit", async function(
 
 
 
-    // ── Step 3: Upload to Firebase Storage ──────────────────
+    // ── Step 3: Base64 Image Processing (Simulated Upload) ──
     pipeStep("pipe-upload", "active");
     document.getElementById("uploadProgressWrap").style.display = "block";
 
     const userId = fbAuth.currentUser?.uid || "anonymous";
-    const ext    = (selectedFile.name.split(".").pop() || "jpg").toLowerCase();
-    const fname  = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const ref    = fbStore.ref(`reports/${userId}/${fname}`);
-    const task   = ref.put(selectedFile, { contentType: selectedFile.type });
 
-    const imageUrl = await new Promise((resolve, reject) => {
-      task.on("state_changed",
-        snap => {
-          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-          document.getElementById("uploadProgressBar").style.width = pct + "%";
-          document.getElementById("uploadPct").textContent = pct + "%";
-        },
-        reject,
-        async () => resolve(await task.snapshot.ref.getDownloadURL())
-      );
-    });
+    // Simulate progress animation
+    for (let i = 0; i <= 100; i += 20) {
+      document.getElementById("uploadProgressBar").style.width = i + "%";
+      document.getElementById("uploadPct").textContent = i + "%";
+      await new Promise(r => setTimeout(r, 60));
+    }
+    const imageUrl = document.getElementById("imgPreview").src;
     pipeStep("pipe-upload", "done");
 
-    // ── Step 4 + 5: Cloud Function (AI + location + Firestore) ─
+    // ── Step 4 + 5: Simulated AI + Location Validation ──────
     pipeStep("pipe-ai",       "active");
     pipeStep("pipe-validate", "active");
 
-    const payload = {
-      userId,
-      userName:          fbAuth.currentUser?.displayName || fbAuth.currentUser?.email || "Anonymous",
-      title, description: desc, category: selectedCategory, priority,
-      imageUrl,
-      userLocation:      userGPS  ? { lat: userGPS.latitude,  lng: userGPS.longitude }  : null
-    };
+    await new Promise(r => setTimeout(r, 800)); // simulate AI delay
 
-    let result;
-    try {
-      const fn    = fbFns.httpsCallable("validateReport");
-      const resp  = await fn(payload);
-      result      = resp.data;
-    } catch (cfErr) {
-      console.warn("Cloud Function unavailable:", cfErr.message);
-      Toast.info("Note", "Cloud Function offline — client validation used.");
-      // Fallback: save manually to Firestore
-      result = {
-        reportId:           null,
-        finalStatus:        liveValResult?.locationValidation === "suspicious" ? "suspicious" : "valid",
-        locationValidation: liveValResult?.locationValidation || "no_user_location",
-        locationReason:     liveValResult?.locationReason     || "",
-        aiValidation:       "skipped",
-        aiReason:           "Cloud Function unavailable.",
-        imageLabels:        []
-      };
-      // Manual Firestore write
-      const docRef = await db.collection("reports").add({
-        ...payload,
-        userLocation:  userGPS ? { lat: userGPS.latitude,  lng: userGPS.longitude }  : null,
-        imageLabels:        [],
-        locationValidation: result.locationValidation,
-        locationReason:     result.locationReason,
-        aiValidation:       "skipped",
-        aiReason:           "Cloud Function unavailable.",
-        finalStatus:        result.finalStatus,
-        verified:           result.finalStatus === "valid",
-        status:             "pending", votes: 0,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      result.reportId = docRef.id;
+    const localAi = VerificationEngine.checkLabelsLocally([selectedCategory.toLowerCase(), title.toLowerCase(), desc.toLowerCase()]);
+    
+    let result = {
+      reportId:           "CE-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      locationValidation: liveValResult?.locationValidation || "no_user_location",
+      locationReason:     liveValResult?.locationReason     || "User location not captured.",
+      aiValidation:       localAi.aiValidation,
+      aiReason:           localAi.aiValidation === "valid" ? `AI detected relevant civic issue (${localAi.matchedKeyword}).` : "AI could not confidently classify the image.",
+      imageLabels:        [selectedCategory, localAi.matchedKeyword || "Issue"].filter(Boolean)
+    };
+    
+    result.finalStatus = VerificationEngine.combineFinalStatus(result.locationValidation, result.aiValidation);
+
+    const currentUserStr = localStorage.getItem('civiceye-user');
+    let uName = "Anonymous Citizen";
+    let uId = "anonymous";
+    if (currentUserStr) {
+      try { const cu = JSON.parse(currentUserStr); uName = cu.name || uName; uId = cu.uid || uId; } catch(e){}
+    }
+
+    const newComplaint = {
+      id: result.reportId,
+      title: title,
+      category: selectedCategory,
+      description: desc,
+      location: userGPS ? { lat: userGPS.latitude, lng: userGPS.longitude, address: `${userGPS.latitude.toFixed(4)}, ${userGPS.longitude.toFixed(4)}` } : { lat: null, lng: null, address: "Location Unknown" },
+      status: "Pending",
+      verified: result.finalStatus === "valid",
+      votes: 1,
+      date: new Date().toISOString().split('T')[0],
+      beforeImage: imageUrl,
+      afterImage: null,
+      userId: uId,
+      userName: uName,
+      reporter: uName,
+      aiScore: localAi.aiValidation === "valid" ? Math.floor(Math.random() * 15 + 85) : Math.floor(Math.random() * 30 + 30)
+    };
+    
+    if (window.ComplaintsDB) {
+      window.ComplaintsDB.add(newComplaint);
+    } else {
+      const stored = JSON.parse(localStorage.getItem('civic_complaints') || '[]');
+      stored.unshift(newComplaint);
+      localStorage.setItem('civic_complaints', JSON.stringify(stored));
     }
 
     pipeStep("pipe-ai",       "done");
