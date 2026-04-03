@@ -15,9 +15,15 @@ const statusColors = {
   processing: '#3B82F6'
 };
 
-// Custom marker icons
-function createMarkerIcon(status, verified) {
-  const color = statusColors[status] || '#6B7280';
+const severityColors = {
+  high: '#B91C1C',
+  medium: '#B45309',
+  low: '#15803D'
+};
+
+// Custom marker icons based on Severity
+function createMarkerIcon(severity, verified) {
+  const color = severityColors[severity] || '#6B7280';
   const border = verified ? '#22C55E' : '#EF4444';
   return L.divIcon({
     className: 'custom-marker',
@@ -125,18 +131,26 @@ function initMap(containerId, lat = 30.7046, lng = 76.7179, zoom = 12) {
 }
 
 // Add complaint markers to map
+let heatLayer = null;
+let isHeatmapActive = false;
+
 function addComplaintMarkers(complaints) {
   if (!civicMap) return;
   complaintMarkers.forEach(m => m.remove());
   complaintMarkers = [];
+  
+  if (markerCluster) {
+    markerCluster.clearLayers();
+  }
 
+  const heatPoints = [];
   const target = markerCluster || civicMap;
 
   complaints.forEach(complaint => {
     if (!complaint.location) return;
     const { lat, lng, address } = complaint.location;
     const marker = L.marker([lat, lng], {
-      icon: createMarkerIcon(complaint.status, complaint.verified)
+      icon: createMarkerIcon(complaint.severity, complaint.verified)
     });
 
     const statusLabel = complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1);
@@ -144,12 +158,7 @@ function addComplaintMarkers(complaints) {
       ? '<span style="background:rgba(34,197,94,0.15);color:#15803D;border:1px solid rgba(34,197,94,0.3);padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;">✓ Verified</span>'
       : '<span style="background:rgba(239,68,68,0.12);color:#B91C1C;border:1px solid rgba(239,68,68,0.25);padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;">⚠ Suspicious</span>';
 
-    const statusStyle = {
-      pending: 'background:rgba(245,158,11,0.12);color:#B45309;border:1px solid rgba(245,158,11,0.25)',
-      resolved: 'background:rgba(34,197,94,0.12);color:#15803D;border:1px solid rgba(34,197,94,0.25)',
-      delayed: 'background:rgba(239,68,68,0.12);color:#B91C1C;border:1px solid rgba(239,68,68,0.25)',
-      processing: 'background:rgba(59,130,246,0.12);color:#1D4ED8;border:1px solid rgba(59,130,246,0.25)'
-    };
+    const severityLabel = complaint.severity.charAt(0).toUpperCase() + complaint.severity.slice(1);
 
     marker.bindPopup(`
       <div class="popup-card">
@@ -160,20 +169,51 @@ function addComplaintMarkers(complaints) {
         </div>
         <div class="popup-title">${complaint.title}</div>
         <div class="popup-desc">${complaint.description}</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;${statusStyle[complaint.status] || ''}">${statusLabel}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <span style="padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;color:${severityColors[complaint.severity]}">● ${severityLabel}</span>
           <span style="font-size:0.78rem;color:#6B7280;">👍 ${complaint.votes} votes</span>
         </div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.06);font-size:0.78rem;color:#6B7280;">
-          📍 ${address || 'Location on map'} &nbsp;|&nbsp; 📅 ${complaint.date}
+          Status: <strong>${statusLabel}</strong>
         </div>
       </div>
     `, { maxWidth: 300 });
 
     target.addLayer(marker);
     complaintMarkers.push(marker);
+
+    // Prepare heatmap data
+    const intensity = complaint.severity === 'high' ? 1.0 : complaint.severity === 'medium' ? 0.6 : 0.3;
+    heatPoints.push([lat, lng, intensity]);
   });
+
+  // Handle Heatmap
+  if (typeof L.heatLayer !== 'undefined') {
+    if (heatLayer) {
+      civicMap.removeLayer(heatLayer);
+    }
+    heatLayer = L.heatLayer(heatPoints, { radius: 25, blur: 15, maxZoom: 14 });
+    if (isHeatmapActive) {
+      civicMap.addLayer(heatLayer);
+      if (markerCluster) civicMap.removeLayer(markerCluster);
+    }
+  }
 }
+
+window.toggleHeatLayer = function() {
+  isHeatmapActive = !isHeatmapActive;
+  if (!civicMap || !heatLayer) return;
+  
+  if (isHeatmapActive) {
+    civicMap.addLayer(heatLayer);
+    if (markerCluster) civicMap.removeLayer(markerCluster);
+    if (typeof Toast !== 'undefined') Toast.info('Heatmap Enabled', 'Showing severity density');
+  } else {
+    civicMap.removeLayer(heatLayer);
+    if (markerCluster) civicMap.addLayer(markerCluster);
+    if (typeof Toast !== 'undefined') Toast.info('Heatmap Disabled', 'Showing individual markers');
+  }
+};
 
 // Get user location
 function getUserLocation(callback) {
@@ -215,3 +255,64 @@ function enableLocationPicker(onSelect) {
   });
   civicMap.getContainer().style.cursor = 'crosshair';
 }
+
+// ======================================
+// LIVE MAP - FIREBASE INTEGRATION
+// ======================================
+window.liveIssues = [];
+window.initLiveMap = function() {
+  if (typeof firebase === 'undefined') {
+    console.error("Firebase not loaded on map.html");
+    return;
+  }
+  const db = firebase.firestore();
+
+  // Listen to 'reports' collection in real-time
+  db.collection("reports").orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+    const issues = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (!data.userLocation && !data.imageLocation) return; // Skip if no location
+
+      const loc = data.userLocation || data.imageLocation;
+
+      // Auto-calculate severity from votes if not directly set
+      let severity = data.severity || data.priority || 'low';
+      if (!data.severity && data.votes !== undefined) {
+        if (data.votes > 10) severity = 'high';
+        else if (data.votes > 5) severity = 'medium';
+      }
+
+      issues.push({
+        id: doc.id,
+        title: data.title || 'Untitled Issue',
+        description: data.description || 'No description provided.',
+        category: data.category || 'Other',
+        status: data.status || 'pending',
+        severity: severity,
+        verified: data.verified || false,
+        votes: data.votes || 0,
+        date: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : new Date().toLocaleDateString(),
+        location: { lat: loc.lat, lng: loc.lng, address: 'Live reported location' }
+      });
+    });
+
+    window.liveIssues = issues;
+    
+    // Refresh map 
+    if (typeof addComplaintMarkers === 'function') addComplaintMarkers(window.liveIssues);
+    
+    // Refresh sidebar if it's currently showing
+    if (typeof renderSidebarList === 'function') {
+      const activeFilterChip = document.querySelector('.filter-chip.active');
+      let currentFilter = activeFilterChip ? activeFilterChip.dataset.filter : 'all';
+      if (typeof window.filterMarkersInfo === 'function') {
+        window.filterMarkersInfo(currentFilter);
+      } else {
+        renderSidebarList(window.liveIssues);
+      }
+    }
+  }, (err) => {
+    console.error("Error fetching live issues:", err);
+  });
+};

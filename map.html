@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <!-- heatmap -->
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   <style>
     .map-page {
       display: flex;
@@ -63,9 +65,9 @@
       color: var(--text-muted);
     }
     .filter-chip:hover, .filter-chip.active { border-color: var(--secondary); background: rgba(79,70,229,0.10); color: var(--secondary); }
-    .filter-chip.status-pending.active  { border-color: #F59E0B; background: rgba(245,158,11,0.10); color: #B45309; }
-    .filter-chip.status-resolved.active { border-color: #22C55E; background: rgba(34,197,94,0.10); color: #15803D; }
-    .filter-chip.status-delayed.active  { border-color: #EF4444; background: rgba(239,68,68,0.10); color: #B91C1C; }
+    .filter-chip.severity-high.active  { border-color: #EF4444; background: rgba(239,68,68,0.10); color: #B91C1C; }
+    .filter-chip.severity-medium.active { border-color: #F59E0B; background: rgba(245,158,11,0.10); color: #B45309; }
+    .filter-chip.severity-low.active  { border-color: #22C55E; background: rgba(34,197,94,0.10); color: #15803D; }
 
     /* Complaint mini cards in sidebar */
     .complaint-mini {
@@ -187,11 +189,10 @@
         <input type="text" id="searchComplaints" placeholder="Search complaints..." />
       </div>
       <div class="filter-chips" id="filterChips">
-        <button class="filter-chip active"          data-filter="all">All</button>
-        <button class="filter-chip status-pending"  data-filter="pending">🟡 Pending</button>
-        <button class="filter-chip status-resolved" data-filter="resolved">🟢 Resolved</button>
-        <button class="filter-chip status-delayed"  data-filter="delayed">🔴 Delayed</button>
-        <button class="filter-chip"                 data-filter="verified">✓ AI Verified</button>
+        <button class="filter-chip active"                data-filter="all">All</button>
+        <button class="filter-chip severity-high"         data-filter="high">🔴 High</button>
+        <button class="filter-chip severity-medium"       data-filter="medium">🟠 Medium</button>
+        <button class="filter-chip severity-low"          data-filter="low">🟢 Low</button>
       </div>
     </div>
     <div class="map-sidebar-body">
@@ -208,20 +209,18 @@
 
     <!-- Stats bar -->
     <div class="map-stats-bar">
-      <div class="map-stat"><div class="map-stat-val" style="color:var(--primary);">6</div><div class="map-stat-lbl">Total</div></div>
-      <div class="map-stat"><div class="map-stat-val" style="color:#B45309;">2</div><div class="map-stat-lbl">Pending</div></div>
-      <div class="map-stat"><div class="map-stat-val" style="color:#15803D;">2</div><div class="map-stat-lbl">Resolved</div></div>
-      <div class="map-stat"><div class="map-stat-val" style="color:#B91C1C;">1</div><div class="map-stat-lbl">Delayed</div></div>
-      <div class="map-stat"><div class="map-stat-val" style="color:var(--accent);">1</div><div class="map-stat-lbl">Processing</div></div>
+      <div class="map-stat"><div class="map-stat-val" style="color:var(--primary);" id="statTotal">0</div><div class="map-stat-lbl">Total</div></div>
+      <div class="map-stat"><div class="map-stat-val" style="color:#EF4444;" id="statHigh">0</div><div class="map-stat-lbl">High</div></div>
+      <div class="map-stat"><div class="map-stat-val" style="color:#F59E0B;" id="statMedium">0</div><div class="map-stat-lbl">Medium</div></div>
+      <div class="map-stat"><div class="map-stat-val" style="color:#22C55E;" id="statLow">0</div><div class="map-stat-lbl">Low</div></div>
     </div>
 
     <!-- Legend -->
     <div class="map-legend">
-      <div style="font-weight:700;font-size:0.82rem;margin-bottom:10px;">📍 Status Legend</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B;"></div>Pending</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#22C55E;"></div>Resolved</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#EF4444;"></div>Delayed</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#3B82F6;"></div>Processing</div>
+      <div style="font-weight:700;font-size:0.82rem;margin-bottom:10px;">📍 Severity Legend</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#EF4444;"></div>High</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#F59E0B;"></div>Medium</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22C55E;"></div>Low</div>
       <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:0.72rem;color:var(--text-muted);">
         Border: <span style="color:#15803D;font-weight:700;">Green</span>=Verified ·
         <span style="color:#B91C1C;font-weight:700;">Red</span>=Suspicious
@@ -232,7 +231,7 @@
     <div class="map-fabs">
       <button class="fab-btn btn-ripple" style="background:linear-gradient(135deg,var(--primary),var(--secondary));color:white;" title="My Location" onclick="locateMe()">📡</button>
       <button class="fab-btn" style="background:var(--glass-bg);border:1px solid var(--border);" title="Report Issue" onclick="window.location.href='report.html'">📋</button>
-      <button class="fab-btn" style="background:var(--glass-bg);border:1px solid var(--border);" title="Refresh Map" onclick="refreshMap()">🔄</button>
+      <button class="fab-btn" style="background:var(--glass-bg);border:1px solid var(--border);" title="Toggle Heatmap" onclick="toggleHeatmap()">🔥</button>
     </div>
   </div>
 </div>
@@ -249,18 +248,29 @@
     return { pending:'🟡', resolved:'🟢', delayed:'🔴', processing:'🔵' }[status] || '⚪';
   }
 
+  function getSeverityColor(severity) {
+    return { high:'#B91C1C', medium:'#B45309', low:'#15803D' }[severity] || '#6B7280';
+  }
+
   function renderSidebarList(data) {
     const list = document.getElementById('complaintList');
     const items = data.filter(c => {
-      if (currentFilter === 'verified')    return c.verified;
-      if (currentFilter !== 'all')         return c.status === currentFilter;
+      if (currentFilter !== 'all') return c.severity === currentFilter;
       return true;
     }).filter(c =>
       !searchQuery ||
       c.title.toLowerCase().includes(searchQuery) ||
-      c.category.toLowerCase().includes(searchQuery)
+      c.category.toLowerCase().includes(searchQuery) ||
+      (c.description && c.description.toLowerCase().includes(searchQuery))
     );
+    
     document.getElementById('complaintCount').textContent = items.length;
+    
+    // Update Stats Bar
+    document.getElementById('statTotal').textContent = data.length;
+    document.getElementById('statHigh').textContent = data.filter(c => c.severity === 'high').length;
+    document.getElementById('statMedium').textContent = data.filter(c => c.severity === 'medium').length;
+    document.getElementById('statLow').textContent = data.filter(c => c.severity === 'low').length;
 
     list.innerHTML = items.map(c => `
       <div class="complaint-mini" onclick="flyTo(${c.location.lat},${c.location.lng})">
@@ -273,11 +283,11 @@
         </div>
         <div style="font-weight:700;font-size:0.875rem;margin-bottom:5px;">${c.title}</div>
         <div style="display:flex;align-items:center;gap:8px;font-size:0.75rem;color:var(--text-muted);">
+          <span style="color:${getSeverityColor(c.severity)}">● ${c.severity.charAt(0).toUpperCase()+c.severity.slice(1)}</span>
+          <span>·</span>
           <span>${getStatusIcon(c.status)} ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span>
           <span>·</span>
           <span>👍 ${c.votes}</span>
-          <span>·</span>
-          <span>${c.date}</span>
         </div>
       </div>
     `).join('') || '<div class="empty-state" style="padding:32px 20px;"><div class="empty-state-icon">🗺️</div><div class="empty-state-title">No complaints match</div><div class="empty-state-desc">Try a different filter</div></div>';
@@ -296,10 +306,10 @@
     }, err => Toast.error('Location Error', err.message));
   }
 
-  function refreshMap() {
-    addComplaintMarkers(SampleComplaints);
-    renderSidebarList(SampleComplaints);
-    Toast.success('Map Refreshed', 'All complaint markers updated');
+  function toggleHeatmap() {
+    if (typeof window.toggleHeatLayer === 'function') {
+      window.toggleHeatLayer();
+    }
   }
 
   // Filter chips
@@ -308,21 +318,38 @@
       document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
       this.classList.add('active');
       currentFilter = this.dataset.filter;
-      renderSidebarList(SampleComplaints);
+      if (typeof window.liveIssues !== 'undefined') {
+        renderSidebarList(window.liveIssues);
+        if (typeof window.filterMarkersInfo === 'function') {
+          window.filterMarkersInfo(currentFilter);
+        }
+      }
     });
   });
 
   // Search
   document.getElementById('searchComplaints').addEventListener('input', function() {
     searchQuery = this.value.toLowerCase().trim();
-    renderSidebarList(SampleComplaints);
+    if (typeof window.liveIssues !== 'undefined') {
+      renderSidebarList(window.liveIssues);
+    }
   });
+</script>
 
+<!-- Firebase UMD libraries for map integration -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
   document.addEventListener('DOMContentLoaded', () => {
     initMap('mainMap', 30.7046, 76.7179, 12);
-    addComplaintMarkers(SampleComplaints);
-    renderSidebarList(SampleComplaints);
-    Toast.info('Live Map Loaded', `${SampleComplaints.length} complaints displayed`);
+    
+    // Connect to Firestore and populate dynamically (logic now in map.js)
+    if (typeof window.initLiveMap === 'function') {
+      window.initLiveMap();
+    } else {
+      console.error("initLiveMap not defined in map.js");
+    }
   });
 </script>
 </body>

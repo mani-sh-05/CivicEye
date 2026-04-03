@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reports collection
+    match /reports/{reportId} {
+      // Anyone logged in can read reports
+      allow read: if request.auth != null;
+
+      // Only the report owner can create a report
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      // Only owner can update (e.g. edit); Cloud Functions can update via admin SDK
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+
+      // No client-side deletes
+      allow delete: if false;
+    }
+
+    // Public stats (read-only)
+    match /stats/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

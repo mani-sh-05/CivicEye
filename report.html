@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Report an Issue – CivicEye</title>
-  <meta name="description" content="Submit a civic complaint with image, GPS location and description. AI validates your report instantly." />
+  <meta name="description" content="Submit a civic complaint with GPS, image EXIF and AI verification." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
@@ -12,135 +12,145 @@
   <link rel="stylesheet" href="css/navbar.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+
   <style>
-    .report-layout { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
+    /* ── Layout ─────────────────────────────────────── */
+    .report-layout { display:grid; grid-template-columns:1fr 390px; gap:28px; align-items:start; }
     .form-card {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      padding: 36px;
-      box-shadow: var(--shadow-xl);
+      background:var(--glass-bg); backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:36px; box-shadow:var(--shadow-xl);
     }
     .sidebar-card {
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      padding: 24px;
-      box-shadow: var(--shadow-md);
-      position: sticky;
-      top: calc(var(--nav-height) + 24px);
+      background:var(--glass-bg); backdrop-filter:var(--glass-blur);
+      border:1px solid var(--glass-border); border-radius:var(--radius-xl);
+      padding:22px; box-shadow:var(--shadow-md);
+      position:sticky; top:calc(var(--nav-height) + 20px);
     }
-    #reportMap { width:100%; height:250px; border-radius:var(--radius-lg); border:1.5px solid var(--border); overflow:hidden; }
+    #reportMap { width:100%; height:230px; border-radius:var(--radius-lg); border:1.5px solid var(--border); }
 
-    /* Steps indicator */
-    .step-indicator { display:flex; align-items:center; gap:0; margin-bottom:30px; }
+    /* ── Step indicator ────────────────────────────── */
+    .step-indicator { display:flex; align-items:center; margin-bottom:28px; }
     .step-ind-item  { display:flex; align-items:center; gap:6px; }
-    .step-ind-num {
-      width:30px; height:30px;
-      border-radius:50%;
-      display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:0.82rem;
-    }
-    .step-ind-num.done    { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; box-shadow:0 4px 12px rgba(79,70,229,0.3); }
-    .step-ind-num.active  { background:linear-gradient(135deg,var(--secondary),var(--accent)); color:white; box-shadow:0 4px 12px rgba(79,70,229,0.25); }
-    .step-ind-num.waiting { background:rgba(148,163,184,0.18); color:var(--text-muted); }
-    .step-ind-sep { flex:1; height:2px; background:linear-gradient(90deg,var(--secondary),var(--accent)); opacity:0.22; min-width:24px; }
+    .step-ind-num   { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.8rem; }
+    .step-ind-num.done    { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:#fff; box-shadow:0 4px 12px rgba(79,70,229,.3); }
+    .step-ind-num.active  { background:linear-gradient(135deg,var(--secondary),var(--accent));  color:#fff; box-shadow:0 4px 12px rgba(79,70,229,.25); }
+    .step-ind-num.waiting { background:rgba(148,163,184,.18); color:var(--text-muted); }
+    .step-ind-sep { flex:1; height:2px; background:linear-gradient(90deg,var(--secondary),var(--accent)); opacity:.18; min-width:20px; }
 
-    /* Category buttons */
-    .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    /* ── Category ──────────────────────────────────── */
+    .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
     .cat-btn {
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 13px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition-fast);
-      background: transparent;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 0.82rem;
-      color: var(--text-secondary);
+      border:1.5px solid var(--border); border-radius:var(--radius-md);
+      padding:12px 6px; text-align:center; cursor:pointer;
+      transition:var(--transition-fast); background:transparent;
+      font-family:'Inter',sans-serif; font-weight:600; font-size:0.8rem; color:var(--text-secondary);
     }
-    .cat-btn:hover   { border-color:var(--secondary); color:var(--secondary); background:rgba(79,70,229,0.05); transform:translateY(-2px); }
-    .cat-btn.selected{ border-color:var(--secondary); background:rgba(79,70,229,0.10); color:var(--secondary); box-shadow:0 4px 14px rgba(79,70,229,0.18); }
-    .cat-btn span    { display:block; font-size:1.5rem; margin-bottom:5px; }
+    .cat-btn:hover    { border-color:var(--secondary); color:var(--secondary); background:rgba(79,70,229,.05); transform:translateY(-2px); }
+    .cat-btn.selected { border-color:var(--secondary); background:rgba(79,70,229,.10); color:var(--secondary); box-shadow:0 4px 12px rgba(79,70,229,.18); }
+    .cat-btn span     { display:block; font-size:1.45rem; margin-bottom:4px; }
 
-    /* Upload zone */
+    /* ── Upload zone ───────────────────────────────── */
     .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: var(--radius-lg);
-      padding: 38px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: var(--transition);
-      background: rgba(79,70,229,0.02);
-      position: relative;
+      border:2px dashed var(--border); border-radius:var(--radius-lg);
+      padding:36px 20px; text-align:center; cursor:pointer;
+      transition:var(--transition); background:rgba(79,70,229,.02); position:relative;
     }
-    .upload-zone:hover, .upload-zone.drag {
-      border-color: var(--secondary);
-      background: rgba(79,70,229,0.06);
-    }
+    .upload-zone:hover,.upload-zone.drag { border-color:var(--secondary); background:rgba(79,70,229,.06); }
     .upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:2; }
-
-    /* Image preview */
-    #imgPreviewWrap { display:none; margin-top:16px; position:relative; }
-    #imgPreview     { width:100%; max-height:200px; object-fit:cover; border-radius:var(--radius-md); }
+    #imgPreviewWrap { display:none; margin-top:14px; position:relative; }
+    #imgPreview     { width:100%; max-height:190px; object-fit:cover; border-radius:var(--radius-md); }
     .remove-img {
-      position:absolute; top:8px; right:8px;
-      background:rgba(0,0,0,0.65); color:white;
-      border:none; width:28px; height:28px; border-radius:50%;
-      cursor:pointer; font-size:0.85rem;
-      display:flex; align-items:center; justify-content:center;
-      transition:var(--transition-fast);
+      position:absolute; top:8px; right:8px; background:rgba(0,0,0,.65); color:#fff;
+      border:none; width:26px; height:26px; border-radius:50%; cursor:pointer;
+      font-size:.8rem; display:flex; align-items:center; justify-content:center; transition:var(--transition-fast);
     }
-    .remove-img:hover { background:rgba(239,68,68,0.85); }
+    .remove-img:hover { background:rgba(239,68,68,.85); }
 
-    /* Priority selectors */
-    .priority-grid { display:flex; gap:10px; }
-    .priority-label { flex:1; cursor:pointer; }
-    .priority-label input[type="radio"] { display:none; }
-    .priority-opt {
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 11px 8px;
-      text-align: center;
-      transition: var(--transition-fast);
+    /* ── Info badges (EXIF / GPS) ──────────────────── */
+    .info-badge {
+      display:none; margin-top:9px; padding:8px 13px;
+      border-radius:var(--radius-md); font-size:.79rem; font-weight:600; border:1px solid transparent;
     }
-    .priority-label input:checked + .priority-opt {
-      border-color: var(--secondary);
-      background: rgba(79,70,229,0.08);
-      box-shadow: 0 4px 12px rgba(79,70,229,0.15);
+    .info-badge.ok      { background:rgba(34,197,94,.10); color:#15803D; border-color:rgba(34,197,94,.30); }
+    .info-badge.warn    { background:rgba(251,191,36,.12); color:#92400E; border-color:rgba(251,191,36,.30); }
+    .info-badge.err     { background:rgba(239,68,68,.08);  color:#B91C1C; border-color:rgba(239,68,68,.25); }
+    .info-badge.loading { background:rgba(79,70,229,.06); color:var(--secondary); border-color:rgba(79,70,229,.20); }
+
+    /* ── Validation result box ─────────────────────── */
+    .val-card {
+      padding:14px 16px; border-radius:var(--radius-lg); border:1.5px solid;
+      margin-bottom:18px; transition:var(--transition);
     }
+    .val-card.valid      { background:rgba(34,197,94,.06); border-color:rgba(34,197,94,.30); }
+    .val-card.suspicious { background:rgba(239,68,68,.07); border-color:rgba(239,68,68,.30); }
+    .val-card.pending    { background:rgba(79,70,229,.05); border-color:rgba(79,70,229,.20); }
+    .val-row  { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+    .val-row:last-child { margin-bottom:0; }
+    .val-icon { font-size:1rem; flex-shrink:0; width:20px; text-align:center; }
+    .val-label{ font-size:.8rem; font-weight:700; flex:1; }
+    .val-status{ font-size:.73rem; font-weight:700; padding:2px 9px; border-radius:20px; }
+    .val-status.valid      { background:rgba(34,197,94,.14); color:#15803D; }
+    .val-status.suspicious { background:rgba(239,68,68,.14); color:#B91C1C; }
+    .val-status.pending    { background:rgba(79,70,229,.12); color:var(--secondary); }
+    .val-status.skipped    { background:rgba(148,163,184,.15); color:var(--text-muted); }
+    .val-note { font-size:.77rem; color:var(--text-muted); margin-top:4px; padding-left:30px; line-height:1.55; }
+    .ai-labels { display:flex; flex-wrap:wrap; gap:5px; padding-left:30px; margin-top:6px; }
+    .ai-chip   { font-size:.70rem; font-weight:600; padding:2px 8px; border-radius:20px;
+                 background:rgba(79,70,229,.08); color:var(--secondary); border:1px solid rgba(79,70,229,.15); }
+
+    /* ── Priority ──────────────────────────────────── */
+    .priority-grid { display:flex; gap:9px; }
+    .priority-label{ flex:1; cursor:pointer; }
+    .priority-label input[type=radio] { display:none; }
+    .priority-opt { border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 6px; text-align:center; transition:var(--transition-fast); }
+    .priority-label input:checked + .priority-opt { border-color:var(--secondary); background:rgba(79,70,229,.08); }
     .priority-opt:hover { border-color:var(--secondary); }
 
-    /* Submit button */
-    .submit-btn {
-      width: 100%;
-      padding: 16px;
-      border-radius: var(--radius-lg);
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      border: none;
-      font-size: 1rem;
-      font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 6px 22px rgba(79,70,229,0.38);
+    /* ── Upload progress ───────────────────────────── */
+    #uploadProgressWrap { display:none; margin-top:10px; }
+    #uploadProgressTrack{ background:rgba(79,70,229,.10); border-radius:99px; overflow:hidden; height:5px; }
+    #uploadProgressBar  { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--primary),var(--secondary)); transition:width .3s ease; width:0%; }
+
+    /* ── Submit pipeline ───────────────────────────── */
+    #submitPipeline { display:none; flex-direction:column; gap:5px; margin-bottom:16px; }
+    .pipe-step {
+      display:flex; align-items:center; gap:10px; padding:8px 13px;
+      border-radius:var(--radius-md); font-size:.81rem; font-weight:600;
+      color:var(--text-muted); background:rgba(79,70,229,.03);
+      border:1px solid transparent; transition:var(--transition-fast);
     }
-    .submit-btn:hover { transform:translateY(-2px); box-shadow:0 10px 32px rgba(79,70,229,0.50); }
-    .submit-btn:disabled { opacity:0.65; cursor:not-allowed; transform:none; }
+    .pipe-step.active { color:var(--secondary); border-color:rgba(79,70,229,.18); background:rgba(79,70,229,.07); }
+    .pipe-step.done   { color:#15803D; border-color:rgba(34,197,94,.20); background:rgba(34,197,94,.06); }
+    .pipe-step.error  { color:#B91C1C; border-color:rgba(239,68,68,.20); background:rgba(239,68,68,.06); }
+    .pipe-icon { width:20px; text-align:center; font-size:.95rem; }
 
-    /* Tips list */
-    .tips li { font-size:0.85rem; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:flex-start; gap:8px; line-height:1.55; }
+    /* ── Suspicious banner ─────────────────────────── */
+    #suspicionBanner {
+      display:none; padding:13px 16px; border-radius:var(--radius-md);
+      background:rgba(239,68,68,.08); border:1.5px solid rgba(239,68,68,.30);
+      margin-bottom:16px; font-size:.83rem; color:#B91C1C; line-height:1.6;
+    }
 
-    /* Responsive */
-    @media (max-width: 880px) { .report-layout { grid-template-columns:1fr; } .sidebar-card { position:static; } }
-    @media (max-width: 560px) { .cat-grid { grid-template-columns:repeat(2,1fr); } .form-card { padding:20px; } }
+    /* ── Submit button ─────────────────────────────── */
+    .submit-btn {
+      width:100%; padding:15px; border-radius:var(--radius-lg);
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      color:#fff; border:none; font-size:.98rem; font-weight:700;
+      font-family:'Inter',sans-serif; cursor:pointer;
+      transition:var(--transition); position:relative; overflow:hidden;
+      box-shadow:0 6px 22px rgba(79,70,229,.38);
+    }
+    .submit-btn:hover    { transform:translateY(-2px); box-shadow:0 10px 30px rgba(79,70,229,.50); }
+    .submit-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+
+    /* ── Tips ──────────────────────────────────────── */
+    .tips li { font-size:.83rem; color:var(--text-muted); margin-bottom:9px; display:flex; align-items:flex-start; gap:8px; line-height:1.55; }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media(max-width:880px){ .report-layout{grid-template-columns:1fr;} .sidebar-card{position:static;} }
+    @media(max-width:560px){ .cat-grid{grid-template-columns:repeat(2,1fr);} .form-card{padding:18px;} }
   </style>
 </head>
 <body>
@@ -176,17 +186,18 @@
 <div id="toast-container"></div>
 
 <div class="page-wrapper">
-  <div class="container" style="padding-top:32px;padding-bottom:60px;">
+  <div class="container" style="padding-top:30px;padding-bottom:60px;">
 
-    <!-- Header -->
-    <div style="margin-bottom:32px;">
-      <div class="section-tag" style="margin-bottom:12px;">📋 Citizen Report</div>
-      <h1 style="font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;margin-bottom:8px;letter-spacing:-0.03em;">Report a Civic Issue</h1>
-      <p style="color:var(--text-muted);">Submit your complaint with evidence. Our AI validates it and routes it to the right department automatically.</p>
+    <!-- Page Header -->
+    <div style="margin-bottom:28px;">
+      <div class="section-tag" style="margin-bottom:10px;">📋 Citizen Report</div>
+      <h1 style="font-size:clamp(1.7rem,4vw,2.5rem);font-weight:900;margin-bottom:8px;letter-spacing:-.03em;">Report a Civic Issue</h1>
+      <p style="color:var(--text-muted);">GPS + EXIF location cross-check <strong>and</strong> Clarifai AI image recognition — both validated securely via Firebase Cloud Function.</p>
     </div>
 
     <div class="report-layout">
-      <!-- FORM CARD -->
+
+      <!-- ════════ MAIN FORM ════════ -->
       <div class="form-card page-enter">
         <form id="reportForm" novalidate>
 
@@ -194,17 +205,17 @@
           <div class="step-indicator">
             <div class="step-ind-item">
               <div class="step-ind-num done">1</div>
-              <span style="font-size:0.82rem;font-weight:600;color:var(--secondary);">Details</span>
+              <span style="font-size:.8rem;font-weight:600;color:var(--secondary);">Details</span>
             </div>
             <div class="step-ind-sep"></div>
             <div class="step-ind-item">
               <div class="step-ind-num active">2</div>
-              <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">Location</span>
+              <span style="font-size:.8rem;font-weight:600;color:var(--text-secondary);">Evidence</span>
             </div>
-            <div class="step-ind-sep" style="opacity:0.10;"></div>
+            <div class="step-ind-sep" style="opacity:.10;"></div>
             <div class="step-ind-item">
               <div class="step-ind-num waiting">3</div>
-              <span style="font-size:0.82rem;font-weight:600;color:var(--text-muted);">Submit</span>
+              <span style="font-size:.8rem;font-weight:600;color:var(--text-muted);">Verify &amp; Submit</span>
             </div>
           </div>
 
@@ -227,7 +238,7 @@
             <label class="form-label" for="issueTitle">Issue Title <span class="required">*</span></label>
             <div class="input-group">
               <span class="input-icon">✏️</span>
-              <input type="text" id="issueTitle" class="form-input" placeholder="e.g. Large pothole on Main Street near the school" maxlength="80" required />
+              <input type="text" id="issueTitle" class="form-input" placeholder="e.g. Deep pothole on Main Street near the school" maxlength="80" required />
             </div>
           </div>
 
@@ -235,25 +246,36 @@
           <div class="form-group">
             <label class="form-label" for="issueDesc">Description <span class="required">*</span></label>
             <textarea id="issueDesc" class="form-textarea" rows="4"
-              placeholder="Describe the issue in detail — location, severity, how long it's been there, impact on residents..."
+              placeholder="Describe the issue — location details, severity, duration, effect on residents…"
               maxlength="500" required></textarea>
-            <div class="form-hint"><span id="descCount">0</span>/500 characters · 50+ words gets priority processing</div>
+            <div class="form-hint"><span id="descCount">0</span>/500 characters</div>
           </div>
 
           <!-- Image Upload -->
           <div class="form-group">
-            <label class="form-label">Photo Evidence <span class="required">*</span></label>
+            <label class="form-label">Photo Evidence <span class="required">*</span>
+              <span style="font-size:.75rem;color:var(--text-muted);font-weight:500;">— AI labels extracted automatically</span>
+            </label>
             <div class="upload-zone" id="uploadZone">
               <input type="file" id="imageInput" accept="image/*" />
               <div id="uploadPlaceholder">
-                <div style="font-size:2.4rem;margin-bottom:10px;">📸</div>
-                <div style="font-weight:600;font-size:0.95rem;color:var(--text-secondary);margin-bottom:4px;">Click or Drag & Drop Image</div>
-                <div style="font-size:0.8rem;color:var(--text-muted);">JPG, PNG, WEBP · Max 5MB · Required for AI verification</div>
+                <div style="font-size:2.2rem;margin-bottom:9px;">📸</div>
+                <div style="font-weight:600;font-size:.93rem;color:var(--text-secondary);margin-bottom:3px;">Click or Drag &amp; Drop</div>
+                <div style="font-size:.78rem;color:var(--text-muted);">JPG · PNG · WEBP — max 5 MB</div>
               </div>
             </div>
+            <!-- Preview -->
             <div id="imgPreviewWrap">
               <img id="imgPreview" alt="Preview" />
-              <button type="button" class="remove-img" id="removeImg">✕</button>
+              <button type="button" class="remove-img" id="removeImg" title="Remove image">✕</button>
+            </div>
+
+            <!-- Upload progress -->
+            <div id="uploadProgressWrap">
+              <div style="display:flex;justify-content:space-between;font-size:.76rem;color:var(--text-muted);margin-bottom:3px;">
+                <span>Uploading to Firebase Storage…</span><span id="uploadPct">0%</span>
+              </div>
+              <div id="uploadProgressTrack"><div id="uploadProgressBar"></div></div>
             </div>
           </div>
 
@@ -263,249 +285,531 @@
             <div class="priority-grid">
               <label class="priority-label">
                 <input type="radio" name="priority" value="low" />
-                <div class="priority-opt">
-                  <div style="font-size:1.3rem;margin-bottom:4px;">🟢</div>
-                  <div style="font-size:0.8rem;font-weight:600;">Low</div>
-                </div>
+                <div class="priority-opt"><div style="font-size:1.25rem;margin-bottom:3px;">🟢</div><div style="font-size:.78rem;font-weight:600;">Low</div></div>
               </label>
               <label class="priority-label">
                 <input type="radio" name="priority" value="medium" checked />
-                <div class="priority-opt" style="border-color:var(--secondary);background:rgba(79,70,229,0.07);">
-                  <div style="font-size:1.3rem;margin-bottom:4px;">🟡</div>
-                  <div style="font-size:0.8rem;font-weight:600;color:var(--secondary);">Medium</div>
+                <div class="priority-opt" style="border-color:var(--secondary);background:rgba(79,70,229,.07);">
+                  <div style="font-size:1.25rem;margin-bottom:3px;">🟡</div><div style="font-size:.78rem;font-weight:600;color:var(--secondary);">Medium</div>
                 </div>
               </label>
               <label class="priority-label">
                 <input type="radio" name="priority" value="high" />
-                <div class="priority-opt">
-                  <div style="font-size:1.3rem;margin-bottom:4px;">🔴</div>
-                  <div style="font-size:0.8rem;font-weight:600;">High</div>
-                </div>
+                <div class="priority-opt"><div style="font-size:1.25rem;margin-bottom:3px;">🔴</div><div style="font-size:.78rem;font-weight:600;">High</div></div>
               </label>
             </div>
           </div>
 
-          <!-- AI Validation result (shown dynamically) -->
-          <div id="validationBox" style="display:none;"></div>
+          <!-- ── Live Validation Panel ── -->
+          <div id="validationPanel" style="display:none;"></div>
+
+          <!-- Suspicious banner -->
+          <div id="suspicionBanner">
+            ⚠️ <strong>Verification Issue Detected.</strong>
+            <span id="suspicionDetail"></span>
+            Your report will be submitted for <strong>manual review</strong>.
+          </div>
+
+          <!-- Submit pipeline steps -->
+          <div id="submitPipeline">
+            <div class="pipe-step" id="pipe-gps">    <span class="pipe-icon">📡</span> Capturing GPS location</div>
+
+            <div class="pipe-step" id="pipe-upload"> <span class="pipe-icon">☁️</span> Uploading image to Firebase Storage</div>
+            <div class="pipe-step" id="pipe-ai">     <span class="pipe-icon">🤖</span> Running Clarifai AI recognition</div>
+            <div class="pipe-step" id="pipe-validate"><span class="pipe-icon">🧠</span> Server-side validation (Cloud Function)</div>
+            <div class="pipe-step" id="pipe-save">   <span class="pipe-icon">💾</span> Saving report to Firestore</div>
+          </div>
 
           <!-- Consent -->
-          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:24px;padding:14px;background:rgba(79,70,229,0.04);border-radius:var(--radius-md);border:1px solid rgba(79,70,229,0.10);">
-            <input type="checkbox" id="consent" style="margin-top:3px;accent-color:var(--secondary);width:16px;height:16px;" required />
-            <label for="consent" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;line-height:1.6;">
-              I confirm this complaint is genuine and accurate. False reports will lower my trust score and may lead to account suspension per CivicEye's community guidelines.
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:22px;padding:13px;background:rgba(79,70,229,.04);border-radius:var(--radius-md);border:1px solid rgba(79,70,229,.10);">
+            <input type="checkbox" id="consent" style="margin-top:3px;accent-color:var(--secondary);width:15px;height:15px;" required />
+            <label for="consent" style="font-size:.83rem;color:var(--text-muted);cursor:pointer;line-height:1.6;">
+              I confirm this complaint is genuine and accurate. False or misleading reports will reduce my trust score and may lead to account suspension.
             </label>
           </div>
 
           <!-- Submit -->
           <button type="submit" class="submit-btn btn-ripple" id="submitBtn">
-            🚀 Submit Complaint to Authorities
+            🚀 Submit &amp; Verify Report
           </button>
         </form>
       </div>
 
-      <!-- SIDEBAR -->
+      <!-- ════════ SIDEBAR ════════ -->
       <div>
-        <!-- Map Picker -->
-        <div class="sidebar-card" style="margin-bottom:20px;">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:6px;">📍 Select Location</h3>
-          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">Click on map to pin the issue, or use GPS auto-detect.</p>
+
+        <!-- Map + GPS -->
+        <div class="sidebar-card" style="margin-bottom:18px;">
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:5px;">📍 Your Live Location</h3>
+          <p style="font-size:.79rem;color:var(--text-muted);margin-bottom:12px;">Auto-detected via GPS. Click map to adjust pin.</p>
           <div id="reportMap"></div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn btn-ghost btn-sm" id="gpsBtn" style="flex:1;" onclick="detectLocation()">📡 Auto-Detect GPS</button>
+          <!-- GPS status -->
+          <div class="info-badge" id="gpsStatusBadge" style="margin-top:9px;"></div>
+          <div style="display:flex;gap:7px;margin-top:9px;">
+            <button class="btn btn-ghost btn-sm" id="gpsBtn" style="flex:1;" onclick="triggerGPS()">📡 Detect GPS</button>
             <button class="btn btn-outline btn-sm" style="flex:1;" onclick="clearLocation()">✕ Clear</button>
           </div>
-          <div id="locationDisplay" style="margin-top:12px;font-size:0.82rem;color:var(--text-muted);display:none;">
-            <strong>📍 Selected:</strong> <span id="locationText"></span>
+          <div id="locationDisplay" style="display:none;margin-top:9px;font-size:.79rem;color:var(--text-muted);">
+            <strong style="color:var(--text-secondary);">📍 User GPS:</strong> <span id="locationText"></span>
           </div>
+
           <input type="hidden" id="latInput" />
           <input type="hidden" id="lngInput" />
         </div>
 
+        <!-- Verification details -->
+        <div class="sidebar-card" style="margin-bottom:18px;">
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:12px;">🔐 Dual Verification</h3>
+          <div style="display:flex;flex-direction:column;gap:11px;">
+            <div style="display:flex;gap:9px;font-size:.8rem;">
+              <span style="margin-top:1px;">📡</span>
+              <div><strong>Browser GPS</strong><br/><span style="color:var(--text-muted);">Real-time location captured from device</span></div>
+            </div>
+
+            <div style="display:flex;gap:9px;font-size:.8rem;">
+              <span style="margin-top:1px;">🤖</span>
+              <div><strong>Clarifai AI Recognition</strong><br/><span style="color:var(--text-muted);">Detects civic content: road, garbage, drain…</span></div>
+            </div>
+            <div style="display:flex;gap:9px;font-size:.8rem;">
+              <span style="margin-top:1px;">☁️</span>
+              <div><strong>Firebase Cloud Function</strong><br/><span style="color:var(--text-muted);">All checks run server-side — API keys hidden</span></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Tips -->
-        <div class="sidebar-card" style="margin-bottom:20px;">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">💡 Tips for Faster Resolution</h3>
+        <div class="sidebar-card">
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:12px;">💡 Tips for AI Verification</h3>
           <ul class="tips">
-            <li>📸 <span>Clear, well-lit photo increases AI verification score by 40%</span></li>
-            <li>📍 <span>Precise GPS location helps route to the correct department</span></li>
-            <li>📝 <span>Detailed description (50+ words) gets priority processing</span></li>
-            <li>🔁 <span>Repeat issues in same area get auto-escalated to senior officers</span></li>
-            <li>⭐ <span>Higher trust score = faster complaint handling</span></li>
+            <li>📸 <span>Take photo <em>on-site</em> with camera location enabled</span></li>
+            <li>🔦 <span>Good lighting helps AI detect civic issues accurately</span></li>
+            <li>🎯 <span>Aim camera at the issue — road, drain, garbage pile</span></li>
+            <li>📍 <span>Allow browser GPS for location cross-check</span></li>
+            <li>📝 <span>Detailed description speeds up authority response</span></li>
           </ul>
         </div>
 
-        <!-- AI Explainer -->
-        <div class="sidebar-card">
-          <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">🧠 Smart Filtering & Validation</h3>
-          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.65;">Our multi-layer AI system checks for:</p>
-          <div style="display:flex;flex-direction:column;gap:9px;">
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> Image quality & content verification</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> GPS location cross-reference</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> Description completeness score</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> User reputation & history check</div>
-            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--danger);">❌</span> Duplicate & spam detection</div>
-          </div>
-        </div>
-      </div>
+      </div><!-- /sidebar -->
     </div>
   </div>
 </div>
 
+<!-- ═══════════════ SCRIPTS ═══════════════════════════════════ -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/app.js"></script>
-<script src="js/map.js"></script>
+<script src="js/verification.js"></script>
+
+<!-- Firebase compat SDK (UMD — no bundler required) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
+
 <script>
-  // Category selection
-  let selectedCategory = '';
-  document.querySelectorAll('.cat-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedCategory = btn.dataset.cat;
-      document.getElementById('categoryInput').value = selectedCategory;
-      checkValidation();
-    });
+/* ═══════════════════════════════════════════════════════════
+   CivicEye — Report Page Controller
+   Full pipeline: GPS → EXIF → Storage → Cloud Function → Firestore
+═══════════════════════════════════════════════════════════ */
+
+// ── Firebase Init ────────────────────────────────────────────
+// ⚠️  Replace these with YOUR Firebase project config values
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db      = firebase.firestore();
+const fbStore = firebase.storage();
+const fbAuth  = firebase.auth();
+const fbFns   = firebase.functions(); // us-central1
+
+// ── State ────────────────────────────────────────────────────
+let selectedCategory = "";
+let selectedFile     = null;
+let imageProvided    = false;
+let userGPS          = null;   // { latitude, longitude, accuracy }
+let liveValResult    = null;   // client-side preview result
+let reportMap, userMarker;
+
+// ── Init ─────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  initMap();
+  autoDetectGPS();
+});
+
+// ════════════════════════════════════════════════════════════
+// MAP
+// ════════════════════════════════════════════════════════════
+function initMap() {
+  reportMap = L.map("reportMap", { zoomControl: true })
+               .setView([30.7046, 76.7179], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap", maxZoom: 19
+  }).addTo(reportMap);
+  reportMap.on("click", e => setLocation(e.latlng.lat, e.latlng.lng, false));
+}
+
+function makeIcon(emoji) {
+  return L.divIcon({
+    className: "",
+    html: `<div style="font-size:22px;line-height:1;">${emoji}</div>`,
+    iconAnchor: [11, 22]
   });
+}
 
-  // Description counter
-  const descTA = document.getElementById('issueDesc');
-  descTA.addEventListener('input', () => {
-    document.getElementById('descCount').textContent = descTA.value.length;
-    checkValidation();
+function setLocation(lat, lng, fromGPS = false) {
+  const fLat = parseFloat(lat).toFixed(6);
+  const fLng = parseFloat(lng).toFixed(6);
+  document.getElementById("latInput").value      = fLat;
+  document.getElementById("lngInput").value      = fLng;
+  document.getElementById("locationText").textContent = `${fLat}, ${fLng}`;
+  document.getElementById("locationDisplay").style.display = "block";
+
+  if (userMarker) userMarker.remove();
+  userMarker = L.marker([fLat, fLng], { icon: makeIcon("📍") })
+    .addTo(reportMap)
+    .bindPopup("📍 Your Location")
+    .openPopup();
+  reportMap.setView([fLat, fLng], 15);
+
+  userGPS = { latitude: parseFloat(fLat), longitude: parseFloat(fLng) };
+  refreshValidationPanel();
+}
+
+function clearLocation() {
+  userGPS = null;
+  ["latInput","lngInput"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("locationDisplay").style.display = "none";
+  if (userMarker) { userMarker.remove(); userMarker = null; }
+  setBadge("gpsStatusBadge", "", "");
+  refreshValidationPanel();
+}
+
+// ════════════════════════════════════════════════════════════
+// GPS
+// ════════════════════════════════════════════════════════════
+async function autoDetectGPS() {
+  setBadge("gpsStatusBadge", "loading", "⌛ Detecting GPS…");
+  try {
+    const pos = await VerificationEngine.captureUserGPS();
+    userGPS   = pos;
+    setLocation(pos.latitude, pos.longitude, true);
+    setBadge("gpsStatusBadge", "ok", `✅ GPS locked · ±${Math.round(pos.accuracy || 0)} m accuracy`);
+    Toast.success("GPS Detected", `Location acquired · ±${Math.round(pos.accuracy || 0)} m`);
+  } catch (err) {
+    setBadge("gpsStatusBadge", "err", `❌ ${err.message}`);
+    Toast.warning("GPS Unavailable", err.message + " — click map to pin manually.");
+  }
+}
+
+function triggerGPS() {
+  const btn = document.getElementById("gpsBtn");
+  btn.disabled    = true;
+  btn.textContent = "⌛ Detecting…";
+  autoDetectGPS().finally(() => {
+    btn.disabled    = false;
+    btn.textContent = "📡 Detect GPS";
   });
+}
 
-  // Image upload
-  const imageInput  = document.getElementById('imageInput');
-  const uploadZone  = document.getElementById('uploadZone');
-  let imageProvided = false;
-
-  imageInput.addEventListener('change', function() { handleFile(this.files[0]); });
-  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
-  uploadZone.addEventListener('dragleave', ()=> uploadZone.classList.remove('drag'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+// ════════════════════════════════════════════════════════════
+// CATEGORY
+// ════════════════════════════════════════════════════════════
+document.querySelectorAll(".cat-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedCategory = btn.dataset.cat;
+    document.getElementById("categoryInput").value = selectedCategory;
   });
+});
 
-  function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) { Toast.warning('File Too Large', 'Max 5MB allowed.'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('imgPreview').src = e.target.result;
-      document.getElementById('imgPreviewWrap').style.display = 'block';
-      document.getElementById('uploadPlaceholder').style.display = 'none';
-      imageProvided = true;
-      checkValidation();
-    };
-    reader.readAsDataURL(file);
+// ════════════════════════════════════════════════════════════
+// IMAGE / EXIF
+// ════════════════════════════════════════════════════════════
+const imageInput = document.getElementById("imageInput");
+const uploadZone = document.getElementById("uploadZone");
+
+imageInput.addEventListener("change", e => handleFile(e.target.files[0]));
+uploadZone.addEventListener("dragover",  e => { e.preventDefault(); uploadZone.classList.add("drag"); });
+uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("drag"));
+uploadZone.addEventListener("drop", e => {
+  e.preventDefault(); uploadZone.classList.remove("drag");
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+async function handleFile(file) {
+  if (!file?.type.startsWith("image/")) return;
+  if (file.size > 5 * 1024 * 1024) { Toast.warning("Too Large", "Max 5 MB."); return; }
+
+  selectedFile  = file;
+  imageProvided = true;
+
+  // Preview
+  const reader  = new FileReader();
+  reader.onload = e => {
+    document.getElementById("imgPreview").src = e.target.result;
+    document.getElementById("imgPreviewWrap").style.display = "block";
+    document.getElementById("uploadPlaceholder").style.display = "none";
+  };
+  reader.readAsDataURL(file);
+
+  refreshValidationPanel();
+}
+
+document.getElementById("removeImg").addEventListener("click", () => {
+  document.getElementById("imgPreview").src = "";
+  document.getElementById("imgPreviewWrap").style.display = "none";
+  document.getElementById("uploadPlaceholder").style.display = "block";
+  imageInput.value = "";
+  selectedFile = null; imageProvided = false;
+  refreshValidationPanel();
+});
+
+// ════════════════════════════════════════════════════════════
+// LIVE VALIDATION PANEL (client-side preview)
+// ════════════════════════════════════════════════════════════
+function refreshValidationPanel() {
+  const panel  = document.getElementById("validationPanel");
+  const banner = document.getElementById("suspicionBanner");
+
+  if (!imageProvided && !userGPS) {
+    panel.style.display  = "none";
+    banner.style.display = "none";
+    return;
   }
 
-  document.getElementById('removeImg').addEventListener('click', () => {
-    document.getElementById('imgPreview').src = '';
-    document.getElementById('imgPreviewWrap').style.display = 'none';
-    document.getElementById('uploadPlaceholder').style.display = 'block';
-    imageInput.value = '';
-    imageProvided = false;
-    checkValidation();
-  });
+  // Location check (client-side)
+  liveValResult = VerificationEngine.validateLocations(userGPS);
+  const locV    = liveValResult.locationValidation;
+  const locOK   = locV === "valid" || locV === "no_image_location";
+  const locIcon = locOK ? "✅" : "⚠️";
+  const locStat = locOK ? "valid" : "suspicious";
 
-  // Map init (report page)
-  let reportMap, reportMarker;
-  let selectedLat = null, selectedLng = null;
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <div class="val-card ${locStat}">
+      <div class="val-row">
+        <span class="val-icon">${locIcon}</span>
+        <span class="val-label">📍 Location Verification</span>
+        <span class="val-status ${locStat}">${locStat.toUpperCase()}</span>
+      </div>
+      <div class="val-note">${liveValResult.locationReason}</div>
 
-  document.addEventListener('DOMContentLoaded', () => {
-    reportMap = L.map('reportMap', { zoomControl: true }).setView([30.7046, 76.7179], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap', maxZoom: 19
-    }).addTo(reportMap);
-    reportMap.on('click', e => {
-      setLocation(e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5));
-    });
-  });
+      <div class="val-row" style="margin-top:10px;">
+        <span class="val-icon">🤖</span>
+        <span class="val-label">Clarifai AI Recognition</span>
+        <span class="val-status pending">PENDING</span>
+      </div>
+      <div class="val-note">AI scan runs server-side after image is uploaded.</div>
+    </div>`;
 
-  function setLocation(lat, lng) {
-    selectedLat = lat; selectedLng = lng;
-    document.getElementById('latInput').value = lat;
-    document.getElementById('lngInput').value = lng;
-    document.getElementById('locationText').textContent = `${lat}, ${lng}`;
-    document.getElementById('locationDisplay').style.display = 'block';
-    if (reportMarker) reportMarker.remove();
-    reportMarker = L.marker([lat, lng]).addTo(reportMap).bindPopup('📍 Issue Location').openPopup();
-    reportMap.setView([lat, lng], 15);
-    checkValidation();
+  // Suspicion banner
+  if (!locOK) {
+    document.getElementById("suspicionDetail").textContent =
+      liveValResult.locationReason || " Location missing or invalid.";
+    banner.style.display = "block";
+  } else {
+    banner.style.display = "none";
   }
+}
 
-  function detectLocation() {
-    const btn = document.getElementById('gpsBtn');
-    btn.innerHTML = '⌛ Detecting...';
-    btn.disabled = true;
-    if (!navigator.geolocation) {
-      Toast.error('Not Supported', 'Geolocation not available.');
-      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false; return;
+// ════════════════════════════════════════════════════════════
+// PIPELINE STEP HELPERS
+// ════════════════════════════════════════════════════════════
+function pipeStep(id, state) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("active","done","error");
+  if (state) el.classList.add(state);
+}
+
+// ════════════════════════════════════════════════════════════
+// FORM SUBMIT — Full Pipeline
+// ════════════════════════════════════════════════════════════
+document.getElementById("reportForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const title    = document.getElementById("issueTitle").value.trim();
+  const desc     = document.getElementById("issueDesc").value.trim();
+  const priority = document.querySelector("input[name=priority]:checked")?.value || "medium";
+  const consent  = document.getElementById("consent").checked;
+
+  // Client validation
+  if (!selectedCategory)        { Toast.error("Missing Category", "Select an issue category."); return; }
+  if (!title)                   { Toast.error("Missing Title",    "Enter an issue title."); return; }
+  if (!desc || desc.length < 20){ Toast.error("Too Short",       "Description needs 20+ characters."); return; }
+  if (!imageProvided)           { Toast.warning("No Image",      "An image is required for AI verification."); return; }
+  if (!consent)                 { Toast.error("Consent Required","Confirm report is genuine."); return; }
+
+  // Lock form
+  const btn = document.getElementById("submitBtn");
+  btn.disabled    = true;
+  btn.textContent = "⌛ Processing…";
+  document.getElementById("submitPipeline").style.display = "flex";
+
+  try {
+    // ── Step 1: GPS ──────────────────────────────────────────
+    pipeStep("pipe-gps", "active");
+    if (!userGPS) {
+      try   { const p = await VerificationEngine.captureUserGPS(); setLocation(p.latitude, p.longitude, true); }
+      catch (_) { /* warned already */ }
     }
-    navigator.geolocation.getCurrentPosition(pos => {
-      setLocation(pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5));
-      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false;
-      Toast.success('Location Detected', 'GPS location pinned on map.');
-    }, err => {
-      Toast.error('Location Error', err.message);
-      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false;
-    }, { enableHighAccuracy: true, timeout: 8000 });
-  }
+    pipeStep("pipe-gps", "done");
 
-  function clearLocation() {
-    selectedLat = null; selectedLng = null;
-    document.getElementById('latInput').value = '';
-    document.getElementById('lngInput').value = '';
-    document.getElementById('locationDisplay').style.display = 'none';
-    if (reportMarker) { reportMarker.remove(); reportMarker = null; }
-    checkValidation();
-  }
 
-  // Real-time validation
-  function checkValidation() {
-    const desc = descTA.value;
-    const hasLoc = !!selectedLat;
-    if (!imageProvided && !desc && !hasLoc) { document.getElementById('validationBox').style.display = 'none'; return; }
-    const result = ValidationEngine.analyze(imageProvided, desc, hasLoc);
-    const box = document.getElementById('validationBox');
-    box.style.display = 'block';
-    box.innerHTML = `
-      <div class="validation-indicator ${result.valid ? 'valid' : 'suspicious'}">
-        <div class="validation-icon">${result.valid ? '✅' : '⚠️'}</div>
-        <div style="flex:1;">
-          <div class="validation-title">${result.valid ? '✓ AI Verified' : '⚠ Needs More Evidence'} – ${result.confidence}% Confidence</div>
-          <div class="validation-desc">${result.reason}</div>
+
+    // ── Step 3: Upload to Firebase Storage ──────────────────
+    pipeStep("pipe-upload", "active");
+    document.getElementById("uploadProgressWrap").style.display = "block";
+
+    const userId = fbAuth.currentUser?.uid || "anonymous";
+    const ext    = (selectedFile.name.split(".").pop() || "jpg").toLowerCase();
+    const fname  = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const ref    = fbStore.ref(`reports/${userId}/${fname}`);
+    const task   = ref.put(selectedFile, { contentType: selectedFile.type });
+
+    const imageUrl = await new Promise((resolve, reject) => {
+      task.on("state_changed",
+        snap => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          document.getElementById("uploadProgressBar").style.width = pct + "%";
+          document.getElementById("uploadPct").textContent = pct + "%";
+        },
+        reject,
+        async () => resolve(await task.snapshot.ref.getDownloadURL())
+      );
+    });
+    pipeStep("pipe-upload", "done");
+
+    // ── Step 4 + 5: Cloud Function (AI + location + Firestore) ─
+    pipeStep("pipe-ai",       "active");
+    pipeStep("pipe-validate", "active");
+
+    const payload = {
+      userId,
+      userName:          fbAuth.currentUser?.displayName || fbAuth.currentUser?.email || "Anonymous",
+      title, description: desc, category: selectedCategory, priority,
+      imageUrl,
+      userLocation:      userGPS  ? { lat: userGPS.latitude,  lng: userGPS.longitude }  : null
+    };
+
+    let result;
+    try {
+      const fn    = fbFns.httpsCallable("validateReport");
+      const resp  = await fn(payload);
+      result      = resp.data;
+    } catch (cfErr) {
+      console.warn("Cloud Function unavailable:", cfErr.message);
+      Toast.info("Note", "Cloud Function offline — client validation used.");
+      // Fallback: save manually to Firestore
+      result = {
+        reportId:           null,
+        finalStatus:        liveValResult?.locationValidation === "suspicious" ? "suspicious" : "valid",
+        locationValidation: liveValResult?.locationValidation || "no_user_location",
+        locationReason:     liveValResult?.locationReason     || "",
+        aiValidation:       "skipped",
+        aiReason:           "Cloud Function unavailable.",
+        imageLabels:        []
+      };
+      // Manual Firestore write
+      const docRef = await db.collection("reports").add({
+        ...payload,
+        userLocation:  userGPS ? { lat: userGPS.latitude,  lng: userGPS.longitude }  : null,
+        imageLabels:        [],
+        locationValidation: result.locationValidation,
+        locationReason:     result.locationReason,
+        aiValidation:       "skipped",
+        aiReason:           "Cloud Function unavailable.",
+        finalStatus:        result.finalStatus,
+        verified:           result.finalStatus === "valid",
+        status:             "pending", votes: 0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      result.reportId = docRef.id;
+    }
+
+    pipeStep("pipe-ai",       "done");
+    pipeStep("pipe-validate", "done");
+    pipeStep("pipe-save",     "done");
+
+    // ── Show final validation panel ──────────────────────────
+    const locOK = result.locationValidation !== "suspicious";
+    const aiOK  = result.aiValidation !== "suspicious";
+    const isValid = result.finalStatus === "valid";
+
+    document.getElementById("validationPanel").innerHTML = `
+      <div class="val-card ${isValid ? "valid" : "suspicious"}">
+        <div class="val-row">
+          <span class="val-icon">${locOK ? "✅":"⚠️"}</span>
+          <span class="val-label">📍 Location Verification</span>
+          <span class="val-status ${locOK ? "valid":"suspicious"}">${result.locationValidation.toUpperCase()}</span>
         </div>
-        <span style="padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;white-space:nowrap;background:${result.valid?'rgba(34,197,94,0.14)':'rgba(239,68,68,0.12)'};color:${result.valid?'#15803D':'#B91C1C'};">${result.label}</span>
+        <div class="val-note">${result.locationReason}</div>
+
+        <div class="val-row" style="margin-top:10px;">
+          <span class="val-icon">${aiOK ? "✅":"⚠️"}</span>
+          <span class="val-label">🤖 Clarifai AI Recognition</span>
+          <span class="val-status ${result.aiValidation === "skipped" ? "skipped" : aiOK ? "valid":"suspicious"}">${result.aiValidation.toUpperCase()}</span>
+        </div>
+        <div class="val-note">${result.aiReason}</div>
+        ${result.imageLabels?.length ? `<div class="ai-labels">${result.imageLabels.slice(0,12).map(l=>`<span class="ai-chip">${l}</span>`).join("")}</div>`:""}
+
+        <div class="val-row" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.07);">
+          <span class="val-icon">${isValid ? "🟢":"🟠"}</span>
+          <span class="val-label" style="font-size:.87rem;">Final Status</span>
+          <span class="val-status ${isValid ? "valid":"suspicious"}" style="font-size:.78rem;">${result.finalStatus.toUpperCase()}</span>
+        </div>
       </div>`;
+
+    // ── Success feedback ─────────────────────────────────────
+    btn.innerHTML = isValid ? "✅ Report Verified & Submitted!" : "⚠️ Submitted — Flagged for Review";
+    btn.style.background = isValid
+      ? "linear-gradient(135deg,#15803D,#22C55E)"
+      : "linear-gradient(135deg,#B45309,#F59E0B)";
+
+    Toast.success(
+      isValid ? "✅ Report Verified & Submitted!" : "⚠️ Report Submitted (Suspicious)",
+      `Report ID: CE-${(result.reportId || "DEMO").slice(-6).toUpperCase()} · ` +
+      (isValid ? "Both checks passed." : "Flagged for manual review.")
+    );
+
+    setTimeout(() => { window.location.href = "tracker.html"; }, 3000);
+
+  } catch (err) {
+    console.error("Submission failed:", err);
+    ["pipe-gps","pipe-exif","pipe-upload","pipe-ai","pipe-validate","pipe-save"].forEach(id => {
+      if (document.getElementById(id)?.classList.contains("active")) pipeStep(id, "error");
+    });
+    btn.disabled    = false;
+    btn.textContent = "🚀 Submit & Verify Report";
+    Toast.error("Submission Failed", err.message || "Check connection and retry.");
   }
+});
 
-  // Form submit
-  document.getElementById('reportForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const title   = document.getElementById('issueTitle').value.trim();
-    const desc    = descTA.value.trim();
-    const consent = document.getElementById('consent').checked;
-    if (!selectedCategory)           { Toast.error('Missing Category', 'Please select an issue category.'); return; }
-    if (!title)                       { Toast.error('Missing Title', 'Please enter an issue title.'); return; }
-    if (!desc || desc.length < 20)    { Toast.error('Description Too Short', 'Provide at least 20 characters.'); return; }
-    if (!imageProvided)               { Toast.warning('No Image', 'Adding an image increases verification score significantly.'); }
-    if (!consent)                     { Toast.error('Consent Required', 'Please confirm the complaint is genuine.'); return; }
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+function setBadge(id, type, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className   = "info-badge";
+  el.style.display = text ? "block" : "none";
+  el.textContent = text;
+  if (type) el.classList.add(type);
+}
 
-    const btn = document.getElementById('submitBtn');
-    btn.innerHTML = '⌛ Submitting & Validating...';
-    btn.disabled = true;
-    btn.style.background = 'linear-gradient(135deg,#6366F1,#14B8A6)';
-
-    await new Promise(r => setTimeout(r, 2000));
-
-    btn.innerHTML = '✅ Submitted Successfully!';
-    btn.style.background = 'linear-gradient(135deg,#15803D,#22C55E)';
-    Toast.success('Complaint Submitted!', 'Report ID: CE-' + Date.now().toString().slice(-6) + ' · Routing to department...');
-    setTimeout(() => { window.location.href = 'tracker.html'; }, 2400);
-  });
+// Description counter
+document.getElementById("issueDesc").addEventListener("input", function() {
+  document.getElementById("descCount").textContent = this.value.length;
+});
 </script>
+
 </body>
 </html>
