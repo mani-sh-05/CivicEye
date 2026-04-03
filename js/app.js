@@ -373,73 +373,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle Desktop Nav Actions
     document.querySelectorAll('.nav-actions').forEach(nav => {
-      // Elements that imply "logged in"
-      const avatar = nav.querySelector('.nav-avatar');
+      // Our modal-based login button
+      const modalLoginBtn = nav.querySelector('.btn-login-nav');
       const bell = nav.querySelector('.nav-bell');
       const reportBtn = nav.querySelector('a[href="report.html"].btn');
 
-      // Hide or show based on auth
-      if (avatar) avatar.style.display = isLoggedIn ? 'flex' : 'none';
+      // Show Login modal button only when logged out
+      if (modalLoginBtn) modalLoginBtn.style.display = isLoggedIn ? 'none' : 'flex';
+      // Bell and Report only when logged in
       if (bell) bell.style.display = isLoggedIn ? 'flex' : 'none';
       if (reportBtn) reportBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
 
-      // Ensure Login/Signup buttons exist
-      let loginBtn = nav.querySelector('.login-btn');
-      let signupBtn = nav.querySelector('.signup-btn');
+      // Logout button (only when logged in)
       let logoutBtn = nav.querySelector('.logout-btn');
-
       const hamburger = nav.querySelector('.nav-hamburger');
-
-      if (!loginBtn) {
-        loginBtn = document.createElement('a');
-        loginBtn.href = 'auth.html';
-        loginBtn.className = 'btn btn-ghost btn-sm login-btn';
-        loginBtn.textContent = 'Sign In';
-        if (hamburger) nav.insertBefore(loginBtn, hamburger);
-      }
-      if (!signupBtn) {
-        signupBtn = document.createElement('a');
-        signupBtn.href = 'auth.html';
-        signupBtn.className = 'btn btn-primary btn-sm signup-btn';
-        signupBtn.textContent = 'Sign Up';
-        if (hamburger) nav.insertBefore(signupBtn, hamburger);
-      }
       if (!logoutBtn) {
         logoutBtn = document.createElement('button');
         logoutBtn.className = 'btn btn-outline btn-sm logout-btn';
         logoutBtn.textContent = 'Log Out';
         logoutBtn.style.padding = '6px 12px';
-        logoutBtn.style.marginLeft = '4px';
         if (hamburger) nav.insertBefore(logoutBtn, hamburger);
       }
-
-      // Toggle visibility
-      loginBtn.style.display = isLoggedIn ? 'none' : 'inline-flex';
-      signupBtn.style.display = isLoggedIn ? 'none' : 'inline-flex';
       logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
     });
 
     // Handle Mobile Nav
     document.querySelectorAll('.mobile-nav').forEach(mNav => {
-      const profileLink = mNav.querySelector('a[href="profile.html"]');
       const reportBtn = mNav.querySelector('a[href="report.html"].btn-primary');
-      
-      if (profileLink) profileLink.style.display = isLoggedIn ? 'block' : 'none';
       if (reportBtn) reportBtn.style.display = isLoggedIn ? 'flex' : 'none';
 
-      let mAuthLink = mNav.querySelector('.m-auth-link');
+      // Mobile login link (opens modal)
+      const mLoginLink = mNav.querySelector('.m-modal-login');
+      if (mLoginLink) mLoginLink.style.display = isLoggedIn ? 'none' : 'block';
+
       let mLogoutLink = mNav.querySelector('.m-logout-link');
-
-      if (!mAuthLink) {
-        mAuthLink = document.createElement('a');
-        mAuthLink.href = 'auth.html';
-        mAuthLink.className = 'btn btn-primary m-auth-link';
-        mAuthLink.style.width = '100%';
-        mAuthLink.style.justifyContent = 'center';
-        mAuthLink.textContent = 'Sign In / Sign Up';
-        mNav.appendChild(mAuthLink);
-      }
-
       if (!mLogoutLink) {
         mLogoutLink = document.createElement('button');
         mLogoutLink.className = 'btn btn-outline logout-btn m-logout-link';
@@ -449,8 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mLogoutLink.textContent = 'Log Out';
         mNav.appendChild(mLogoutLink);
       }
-
-      mAuthLink.style.display = isLoggedIn ? 'none' : 'flex';
       mLogoutLink.style.display = isLoggedIn ? 'flex' : 'none';
     });
   }

@@ -14,6 +14,221 @@
   <link rel="stylesheet" href="css/navbar.css" />
   <link rel="stylesheet" href="css/animations.css" />
   <style>
+    /* ── Login Nav Button ── */
+    .btn-login-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      border: 1.5px solid rgba(79,70,229,0.35);
+      background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(20,184,166,0.06));
+      color: var(--secondary);
+      font-size: 0.87rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      font-family: 'Inter', sans-serif;
+      backdrop-filter: blur(8px);
+    }
+    .btn-login-nav:hover {
+      background: linear-gradient(135deg, rgba(79,70,229,0.18), rgba(20,184,166,0.12));
+      border-color: var(--secondary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(79,70,229,0.18);
+    }
+    .btn-login-nav-icon { font-size: 1rem; }
+
+    /* ── Login Role Modal ── */
+    .login-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10,15,40,0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    .login-modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .login-modal {
+      background: var(--glass-bg, rgba(255,255,255,0.95));
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid var(--glass-border, rgba(255,255,255,0.6));
+      border-radius: 28px;
+      padding: 44px 40px 36px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 40px 100px rgba(10,15,40,0.30), 0 0 0 1px rgba(255,255,255,0.4);
+      transform: translateY(20px) scale(0.96);
+      transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), opacity 0.28s ease;
+      opacity: 0;
+      position: relative;
+    }
+    .login-modal-overlay.active .login-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    [data-theme="dark"] .login-modal {
+      background: rgba(15,23,42,0.92);
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.60), 0 0 60px rgba(79,70,229,0.12);
+    }
+    .login-modal-close {
+      position: absolute;
+      top: 16px; right: 18px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      line-height: 1;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .login-modal-close:hover { background: rgba(0,0,0,0.06); }
+    [data-theme="dark"] .login-modal-close:hover { background: rgba(255,255,255,0.08); }
+    .login-modal-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-modal-logo {
+      width: 60px; height: 60px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--primary, #1E3A8A), var(--secondary, #4F46E5));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 16px;
+      box-shadow: 0 10px 32px rgba(79,70,229,0.35);
+    }
+    .login-modal-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .login-modal-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .login-role-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .login-role-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 26px 16px 22px;
+      border-radius: 20px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-role-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.25s;
+      border-radius: 18px;
+    }
+    .login-role-card:hover::before { opacity: 1; }
+    .login-role-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+    }
+    /* User card */
+    .login-role-card.user-card {
+      background: linear-gradient(135deg, rgba(79,70,229,0.06), rgba(20,184,166,0.05));
+      border-color: rgba(79,70,229,0.18);
+    }
+    .login-role-card.user-card::before {
+      background: linear-gradient(135deg, rgba(79,70,229,0.10), rgba(20,184,166,0.08));
+    }
+    .login-role-card.user-card:hover { border-color: rgba(79,70,229,0.45); }
+    /* Admin card */
+    .login-role-card.admin-card {
+      background: linear-gradient(135deg, rgba(239,68,68,0.05), rgba(245,158,11,0.05));
+      border-color: rgba(239,68,68,0.18);
+    }
+    .login-role-card.admin-card::before {
+      background: linear-gradient(135deg, rgba(239,68,68,0.10), rgba(245,158,11,0.08));
+    }
+    .login-role-card.admin-card:hover { border-color: rgba(239,68,68,0.45); }
+    [data-theme="dark"] .login-role-card.user-card  { background: rgba(79,70,229,0.08); border-color: rgba(79,70,229,0.25); }
+    [data-theme="dark"] .login-role-card.admin-card { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.25); }
+    .role-icon-wrap {
+      width: 68px; height: 68px;
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .user-card .role-icon-wrap {
+      background: linear-gradient(135deg, #4F46E5, #14B8A6);
+      box-shadow: 0 8px 24px rgba(79,70,229,0.35);
+    }
+    .admin-card .role-icon-wrap {
+      background: linear-gradient(135deg, #DC2626, #F59E0B);
+      box-shadow: 0 8px 24px rgba(239,68,68,0.35);
+    }
+    .role-label {
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text-primary);
+      position: relative; z-index: 1;
+    }
+    .role-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+      position: relative; z-index: 1;
+    }
+    .role-arrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+      position: relative; z-index: 1;
+      margin-top: 4px;
+    }
+    .user-card .role-arrow  { background: rgba(79,70,229,0.12); color: var(--secondary, #4F46E5); }
+    .admin-card .role-arrow { background: rgba(239,68,68,0.12);  color: #DC2626; }
+    .login-modal-footer {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    @media (max-width: 480px) {
+      .login-modal { padding: 32px 20px 28px; }
+      .login-role-cards { grid-template-columns: 1fr; }
+      .btn-login-nav-text { display: none; }
+    }
     /* ── Hero ── */
     .hero {
       min-height: 100vh;
@@ -323,7 +538,10 @@
     <div class="nav-actions">
       <button class="dark-toggle" id="darkToggle" title="Toggle Dark Mode">🌙</button>
       <div class="nav-bell" title="Notifications">🔔<div class="nav-bell-dot"></div></div>
-      <a href="profile.html" class="nav-avatar" title="My Profile">R</a>
+      <button class="btn-login-nav" id="loginNavBtn" onclick="openLoginModal()" title="Login">
+        <span class="btn-login-nav-icon">👤</span>
+        <span class="btn-login-nav-text">Login</span>
+      </button>
       <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
       <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
@@ -338,7 +556,7 @@
   <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
   <a href="community.html" class="nav-link">🗳️ Community</a>
   <a href="tracker.html"   class="nav-link">📡 Tracker</a>
-  <a href="profile.html"   class="nav-link">👤 Profile</a>
+  <a href="#" class="nav-link m-modal-login" onclick="openLoginModal();return false;">👤 Login</a>
   <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
   <a href="report.html" class="btn btn-primary" style="width:100%;justify-content:center;">📋 Report an Issue</a>
 </div>
@@ -698,5 +916,73 @@
 </footer>
 
 <script src="js/app.js"></script>
+
+<!-- ═══════════════════════════════════
+     LOGIN ROLE MODAL
+════════════════════════════════════ -->
+<div class="login-modal-overlay" id="loginModalOverlay" onclick="handleOverlayClick(event)">
+  <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <button class="login-modal-close" onclick="closeLoginModal()" aria-label="Close">✕</button>
+
+    <div class="login-modal-header">
+      <div class="login-modal-logo">👁️</div>
+      <h2 class="login-modal-title" id="loginModalTitle">Welcome to CivicEye</h2>
+      <p class="login-modal-subtitle">How would you like to sign in?<br>Choose your role to continue.</p>
+    </div>
+
+    <div class="login-role-cards">
+
+      <!-- Citizen / User Card -->
+      <div class="login-role-card user-card" id="roleUserCard"
+           tabindex="0" role="button" aria-label="Login as Citizen"
+           onclick="goToLogin('auth.html')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')goToLogin('auth.html')">
+        <div class="role-icon-wrap">🧑‍💼</div>
+        <div class="role-label">Citizen</div>
+        <div class="role-desc">Report issues, track complaints &amp; engage with your community.</div>
+        <div class="role-arrow">Sign In →</div>
+      </div>
+
+      <!-- Admin Card -->
+      <div class="login-role-card admin-card" id="roleAdminCard"
+           tabindex="0" role="button" aria-label="Login as Admin"
+           onclick="goToLogin('admin-login.html')"
+           onkeydown="if(event.key==='Enter'||event.key===' ')goToLogin('admin-login.html')">
+        <div class="role-icon-wrap">🛡️</div>
+        <div class="role-label">Admin</div>
+        <div class="role-desc">Municipal control center for managing complaints &amp; resolutions.</div>
+        <div class="role-arrow">Admin Portal →</div>
+      </div>
+
+    </div>
+
+    <div class="login-modal-footer">
+      🔒 Your session is secure &amp; encrypted
+    </div>
+  </div>
+</div>
+
+<script>
+  function openLoginModal() {
+    document.getElementById('loginModalOverlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLoginModal() {
+    document.getElementById('loginModalOverlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function goToLogin(page) {
+    // Explicitly navigate — bypasses any global <a> click interceptors
+    closeLoginModal();
+    window.location.href = page;
+  }
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('loginModalOverlay')) closeLoginModal();
+  }
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLoginModal();
+  });
+</script>
 </body>
 </html>
