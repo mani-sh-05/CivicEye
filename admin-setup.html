@@ -341,7 +341,7 @@
   // Auth guard
   const adminData = JSON.parse(localStorage.getItem('civiceye_admin') || 'null');
   if (!adminData || !adminData.loggedIn) {
-    window.location.href = 'admin-login.html';
+    window.location.href = 'auth.html';
   } else {
     document.getElementById('adminWelcomeName').textContent = `Welcome, ${adminData.name}!`;
   }

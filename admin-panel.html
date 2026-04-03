@@ -569,10 +569,83 @@
   </div><!-- /main-wrap -->
 </div><!-- /admin-layout -->
 
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/admin.js"></script>
 <script>
-  // Auth configuration is handled by the imported modules automatically.
+  // ─── Auth Guard (localStorage-based for demo admin) ───────
+  (function() {
+    const adminData = JSON.parse(localStorage.getItem('civiceye_admin') || 'null');
+    const profile   = JSON.parse(localStorage.getItem('civiceye_admin_profile') || 'null');
+    if (!adminData || !adminData.loggedIn) {
+      window.location.href = 'auth.html'; return;
+    }
+    if (!profile || !profile.setupComplete) {
+      window.location.href = 'admin-setup.html'; return;
+    }
+
+    // Populate sidebar & topbar with real admin info
+    const name = adminData.name || 'Admin';
+    const dept = profile.department || 'General';
+    const initial = name.charAt(0).toUpperCase();
+
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent   = name;
+    document.getElementById('sidebarRole').textContent   = dept + ' Department';
+    document.getElementById('deptLabel').textContent     = dept;
+    document.getElementById('topbarDept').textContent    = '\uD83C\uDFDB\uFE0F ' + dept;
+    document.getElementById('profileName').textContent   = name;
+    document.getElementById('profileEmail').textContent  = adminData.email || '';
+    document.getElementById('profileDept').textContent   = dept;
+    document.getElementById('profileLogin').textContent  =
+      new Date(adminData.loginTime || Date.now()).toLocaleString();
+  })();
+</script>
+<script>
+  // ─── Demo data seeded per department ─────────────────────
+  const _profile = JSON.parse(localStorage.getItem('civiceye_admin_profile') || '{}');
+  const _dept    = _profile.department || 'General';
+
+  const DEMO_ISSUES_ALL = [
+    { id:'D001', category:'Roads',        title:'Large pothole on MG Road',              location:'MG Road, Sector 8',         date:'2026-04-01', reporter:'Rajesh Kumar',  votes:47, status:'Pending',     aiScore:91, isDelayed:false, description:'Deep pothole causing tyre damage near the main intersection.' },
+    { id:'D002', category:'Roads',        title:'Broken divider strip near flyover',     location:'NH-44 Flyover, Punjab',     date:'2026-03-28', reporter:'Priya Sharma',  votes:23, status:'In Progress', aiScore:84, isDelayed:false, description:'Divider strip broken, making lane crossings dangerous at night.' },
+    { id:'D003', category:'Roads',        title:'Road cave-in near school zone',          location:'School Rd, Sector 12',      date:'2026-03-20', reporter:'Amit Singh',    votes:62, status:'Pending',     aiScore:95, isDelayed:true,  description:'Road has collapsed near school entrance posing safety risk for children.' },
+    { id:'D004', category:'Garbage',      title:'Overflowing bins at bus stand',         location:'Bus Stand, Sector 22',      date:'2026-04-01', reporter:'Sunita Devi',   votes:83, status:'Pending',     aiScore:88, isDelayed:false, description:'Garbage bins overflowing for 3+ days causing health hazards.' },
+    { id:'D005', category:'Garbage',      title:'Illegal dumping near park',             location:'Gandhi Park, Phase 5',      date:'2026-03-30', reporter:'Vikram Rao',    votes:35, status:'In Progress', aiScore:79, isDelayed:false, description:'Construction debris dumped illegally next to the public park.' },
+    { id:'D006', category:'Water Supply', title:'Pipeline burst on Sector 4',            location:'Sector 4, Chandigarh',      date:'2026-03-25', reporter:'Meera Joshi',   votes:91, status:'Pending',     aiScore:97, isDelayed:true,  description:'Water main burst, flooding 200m of road and cutting supply to 3 blocks.' },
+    { id:'D007', category:'Water Supply', title:'No water supply for 4 days',            location:'Model Town, Ludhiana',      date:'2026-04-02', reporter:'Arjun Verma',   votes:54, status:'Pending',     aiScore:90, isDelayed:false, description:'Entire colony has had no water supply since Saturday.' },
+    { id:'D008', category:'Electricity',  title:'Street lights off for 2 weeks',        location:'Highway 21, Punjab',        date:'2026-03-30', reporter:'Kabir Mehta',   votes:38, status:'In Progress', aiScore:82, isDelayed:false, description:'Multiple street lights not working on the highway causing accidents at night.' },
+    { id:'D009', category:'Electricity',  title:'Exposed live wire near market',         location:'Old Sabzi Mandi, Patiala',  date:'2026-03-26', reporter:'Nisha Gupta',   votes:72, status:'Pending',     aiScore:98, isDelayed:true,  description:'HV wire hanging low near market entrance. Serious electrocution risk.' },
+    { id:'D010', category:'Others',       title:'Sewage overflow on main street',        location:'Civil Lines, Ambala',       date:'2026-04-01', reporter:'Ravi Tiwari',   votes:66, status:'Pending',     aiScore:87, isDelayed:false, description:'Open sewer drain overflowing onto the main road causing stench and disease risk.' },
+    { id:'D011', category:'Others',       title:'Stray dog menace near school',          location:'DAV School Rd, Jalandhar',  date:'2026-03-29', reporter:'Anita Bose',    votes:29, status:'Resolved',    aiScore:75, isDelayed:false, description:'Pack of aggressive stray dogs near school entrance posing danger to students.' },
+  ];
+
+  // Filter by current dept, fall back to all for 'Others'/'General'
+  const _filteredIssues = _dept === 'Others' || _dept === 'General'
+    ? DEMO_ISSUES_ALL
+    : DEMO_ISSUES_ALL.filter(i => i.category === _dept);
+
+  let _liveIssues = JSON.parse(localStorage.getItem('civiceye_issues_' + _dept) || 'null') || _filteredIssues;
+
+  window.getIssues = () => _liveIssues;
+
+  function _saveIssues() {
+    localStorage.setItem('civiceye_issues_' + _dept, JSON.stringify(_liveIssues));
+  }
+
+  window.markProgress = (id) => {
+    const issue = _liveIssues.find(i => i.id === id);
+    if (issue) { issue.status = 'In Progress'; _saveIssues(); refresh(); toast('🔄 Status Updated', 'Issue marked as In Progress', 'info'); }
+  };
+
+  window.submitResolution = async (id, afterDataURL, comment) => {
+    const issue = _liveIssues.find(i => i.id === id);
+    if (issue) {
+      issue.status = 'Resolved';
+      issue.afterImage = afterDataURL;
+      issue.resolveComment = comment || 'Resolution confirmed by admin';
+      _saveIssues();
+      refresh();
+      toast('✅ Issue Resolved!', 'Proof of resolution saved.', 'success');
+    }
+  };
 
   // ─── Refresh Engine ──────────────────────────────────────
   window.refreshUI = (issues) => {
@@ -840,12 +913,16 @@
   // ─── Logout ───────────────────────────────────────────────
   function logout() {
     if (!confirm('Logout from admin panel?')) return;
-    if (window.logout) window.logout();
+    localStorage.removeItem('civiceye_admin');
+    localStorage.removeItem('civiceye_admin_profile');
+    window.location.href = 'auth.html';
   }
 
   // ─── Init ─────────────────────────────────────────────────
-  // Note: Init is handled purely by the modular scripts in js/admin.js now.
-  // The global variables will be cleanly populated from Firestore via js/auth.js and js/admin.js.
+  document.addEventListener('DOMContentLoaded', () => {
+    updateStats();
+    renderDash();
+  });
 </script>
 </body>
 </html>
