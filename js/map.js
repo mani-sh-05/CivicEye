@@ -22,27 +22,36 @@ const severityColors = {
 };
 
 // Custom marker icons based on Severity
-function createMarkerIcon(severity, verified) {
-  const color = severityColors[severity] || '#6B7280';
+function createMarkerIcon(severity, verified, boosted) {
+  const color  = severityColors[severity] || '#6B7280';
   const border = verified ? '#22C55E' : '#EF4444';
+  const ring   = boosted
+    ? 'box-shadow:0 0 0 3px rgba(20,184,166,0.40),0 4px 16px rgba(0,0,0,0.25);'
+    : 'box-shadow:0 4px 16px rgba(0,0,0,0.25);';
+  const badge  = boosted
+    ? `<div style="position:absolute;top:-6px;right:-6px;background:linear-gradient(135deg,#4F46E5,#14B8A6);color:white;font-size:9px;font-weight:900;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;border:1.5px solid white;z-index:2;">⚡</div>`
+    : '';
   return L.divIcon({
     className: 'custom-marker',
     html: `
-      <div style="
-        width: 36px; height: 36px;
-        background: white;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
-        border: 3px solid ${border};
-        display: flex; align-items: center; justify-content: center;
-      ">
+      <div style="position:relative;">
+        ${badge}
         <div style="
-          width: 18px; height: 18px;
-          background: ${color};
-          border-radius: 50%;
-          transform: rotate(45deg);
-        "></div>
+          width: 36px; height: 36px;
+          background: white;
+          border-radius: 50% 50% 50% 0;
+          transform: rotate(-45deg);
+          ${ring}
+          border: 3px solid ${border};
+          display: flex; align-items: center; justify-content: center;
+        ">
+          <div style="
+            width: 18px; height: 18px;
+            background: ${color};
+            border-radius: 50%;
+            transform: rotate(45deg);
+          "></div>
+        </div>
       </div>
     `,
     iconSize: [36, 36],
@@ -153,7 +162,7 @@ function addComplaintMarkers(complaints) {
     if (!complaint.location) return;
     const { lat, lng, address } = complaint.location;
     const marker = L.marker([lat, lng], {
-      icon: createMarkerIcon(complaint.severity, complaint.verified)
+      icon: createMarkerIcon(complaint.severity, complaint.verified, complaint.boosted)
     });
 
     const statusLabel = complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1);
@@ -163,22 +172,30 @@ function addComplaintMarkers(complaints) {
 
     const severityLabel = complaint.severity.charAt(0).toUpperCase() + complaint.severity.slice(1);
 
+    const boostedBadge = complaint.boosted
+      ? '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:0.66rem;font-weight:800;background:linear-gradient(135deg,#4F46E5,#14B8A6);color:white;margin-left:6px;">⚡ Priority</span>'
+      : '';
+
     marker.bindPopup(`
       <div class="popup-card">
         <div style="background:linear-gradient(135deg,#1E3A8A,#4F46E5);height:8px;border-radius:8px 8px 0 0;margin:-16px -16px 16px;"></div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <span style="font-size:0.72rem;color:#6B7280;font-weight:500;">${complaint.category.toUpperCase()}</span>
-          ${verifiedBadge}
+          <div style="display:flex;gap:4px;align-items:center;">${verifiedBadge}${boostedBadge}</div>
         </div>
         <div class="popup-title">${complaint.title}</div>
         <div class="popup-desc">${complaint.description}</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-          <span style="padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;color:${severityColors[complaint.severity]}">● ${severityLabel}</span>
+          <span style="padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;color:${severityColors[complaint.severity]}">&#9679; ${severityLabel}</span>
           <span style="font-size:0.78rem;color:#6B7280;">👍 ${complaint.votes} votes</span>
         </div>
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,0.06);font-size:0.78rem;color:#6B7280;">
           Status: <strong>${statusLabel}</strong>
         </div>
+        ${!complaint.boosted ? `
+        <button class="map-boost-btn" onclick="handleMapBoost('${complaint.id}')">
+          ⚡ Prioritize for ₹20
+        </button>` : ''}
       </div>
     `, { maxWidth: 300 });
 
@@ -294,6 +311,7 @@ window.initLiveMap = function() {
         status: data.status || 'pending',
         severity: severity,
         verified: data.verified || false,
+        boosted: data.boosted || false,
         votes: data.votes || 0,
         date: data.createdAt ? new Date(data.createdAt.toMillis()).toLocaleDateString() : new Date().toLocaleDateString(),
         location: { lat: loc.lat, lng: loc.lng, address: 'Live reported location' }
@@ -318,4 +336,31 @@ window.initLiveMap = function() {
   }, (err) => {
     console.error("Error fetching live issues:", err);
   });
+};
+
+// ══════════════════════════════════════════════════════════════
+// BOOST FROM MAP POPUP
+// ══════════════════════════════════════════════════════════════
+window.handleMapBoost = function(reportId) {
+  if (typeof Toast !== 'undefined') {
+    Toast.info('⚡ Processing Boost…', 'Simulating ₹20 payment for demo.');
+  }
+  // In production: open Razorpay/UPI modal here
+  // For demo: update Firestore boosted flag after 1.5s
+  setTimeout(async () => {
+    try {
+      if (typeof firebase !== 'undefined') {
+        await firebase.firestore().collection('reports').doc(reportId).update({ boosted: true });
+      }
+      if (typeof Toast !== 'undefined') {
+        Toast.success('⚡ Priority Boost Activated!',
+          'This issue is now highlighted in the admin dashboard.');
+      }
+    } catch(e) {
+      console.warn('Could not update boost flag:', e.message);
+      if (typeof Toast !== 'undefined') {
+        Toast.success('⚡ Priority Boost Activated! (Demo)', 'Issue flagged as high priority.');
+      }
+    }
+  }, 1500);
 };
