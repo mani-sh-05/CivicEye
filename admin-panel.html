@@ -569,29 +569,23 @@
   </div><!-- /main-wrap -->
 </div><!-- /admin-layout -->
 
-<script src="js/admin-data.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/admin.js"></script>
 <script>
-  // ─── Auth guard ────────────────────────────────────────────
-  const adminData    = JSON.parse(localStorage.getItem('civiceye_admin') || 'null');
-  const adminProfile = JSON.parse(localStorage.getItem('civiceye_admin_profile') || 'null');
-  if (!adminData || !adminData.loggedIn) { window.location.href = 'admin-login.html'; }
-  if (!adminProfile)                      { window.location.href = 'admin-setup.html'; }
+  // Auth configuration is handled by the imported modules automatically.
 
-  const dept = adminProfile.department;
-
-  // ─── Seed demo data if empty ──────────────────────────────
-  function seedIssues() {
-    const existing = JSON.parse(localStorage.getItem('civiceye_issues') || 'null');
-    if (existing && existing.length > 0) return;
-    localStorage.setItem('civiceye_issues', JSON.stringify(DEMO_ISSUES));
-  }
+  // ─── Refresh Engine ──────────────────────────────────────
+  window.refreshUI = (issues) => {
+    updateStats(issues);
+    renderDash(issues);
+    if (document.getElementById('view-issues').classList.contains('active')) {
+      renderIssues(issues);
+    }
+  };
 
   // ─── Load issues ─────────────────────────────────────────
   function getIssues() {
-    return JSON.parse(localStorage.getItem('civiceye_issues') || '[]').filter(i => i.category === dept);
-  }
-  function saveIssues(all) {
-    localStorage.setItem('civiceye_issues', JSON.stringify(all));
+    return window.getIssues ? window.getIssues() : [];
   }
 
   // ─── Stats ────────────────────────────────────────────────
@@ -707,14 +701,7 @@
 
   // ─── Actions ─────────────────────────────────────────────
   function markProgress(id) {
-    const all = JSON.parse(localStorage.getItem('civiceye_issues') || '[]');
-    const idx = all.findIndex(i => i.id === id);
-    if (idx < 0) return;
-    if (all[idx].status === 'Resolved') return;
-    all[idx].status = 'In Progress';
-    saveIssues(all);
-    toast('🔄 Status Updated', 'Issue marked as In Progress', 'info');
-    refresh();
+    if(window.markProgress) window.markProgress(id);
   }
 
   let resolvingId = null;
@@ -775,20 +762,22 @@
     });
   });
 
-  document.getElementById('modalSubmit').addEventListener('click', () => {
+  document.getElementById('modalSubmit').addEventListener('click', async () => {
     if (!resolvingId) return;
-    const all   = JSON.parse(localStorage.getItem('civiceye_issues') || '[]');
-    const idx   = all.findIndex(i => i.id === resolvingId);
-    if (idx < 0) return;
-    all[idx].status         = 'Resolved';
-    all[idx].afterImage     = afterDataURL || generatePlaceholderDataURL();
-    all[idx].resolveComment = document.getElementById('resolveComment').value;
-    all[idx].resolvedAt     = new Date().toLocaleDateString('en-IN');
-    saveIssues(all);
+    document.getElementById('modalSubmit').disabled = true;
+    document.getElementById('modalSubmit').textContent = "Submitting...";
+    
+    const afterImageToSave = afterDataURL || generatePlaceholderDataURL();
+    const comment = document.getElementById('resolveComment').value;
+    
+    if (window.submitResolution) {
+        await window.submitResolution(resolvingId, afterImageToSave, comment);
+    }
+    
     document.getElementById('resolveModal').classList.remove('open');
-    toast('✅ Issue Resolved!', 'Proof of resolution saved and visible to citizen.', 'success');
-    refresh();
     resolvingId = null;
+    document.getElementById('modalSubmit').disabled = false;
+    document.getElementById('modalSubmit').textContent = "✅ Submit Resolution Proof";
   });
 
   // Generate a colored placeholder canvas if no image uploaded
@@ -851,31 +840,12 @@
   // ─── Logout ───────────────────────────────────────────────
   function logout() {
     if (!confirm('Logout from admin panel?')) return;
-    localStorage.removeItem('civiceye_admin');
-    window.location.href = 'admin-login.html';
+    if (window.logout) window.logout();
   }
 
   // ─── Init ─────────────────────────────────────────────────
-  function init() {
-    seedIssues();
-
-    // Populate UI admin info
-    document.getElementById('deptLabel').textContent   = dept;
-    document.getElementById('topbarDept').textContent  = `🏢 ${dept}`;
-    document.getElementById('sidebarName').textContent = adminData.name;
-    document.getElementById('sidebarRole').textContent = `${dept} Admin`;
-    document.getElementById('sidebarAvatar').textContent = adminData.name.charAt(0).toUpperCase();
-    document.getElementById('profileAvatarLg').textContent = adminData.name.charAt(0).toUpperCase();
-    document.getElementById('profileName').textContent  = adminData.name;
-    document.getElementById('profileEmail').textContent = adminData.email;
-    document.getElementById('profileDept').textContent  = dept;
-    document.getElementById('profileLogin').textContent = new Date(adminData.loginTime).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});
-
-    updateStats();
-    renderDash();
-  }
-
-  init();
+  // Note: Init is handled purely by the modular scripts in js/admin.js now.
+  // The global variables will be cleanly populated from Firestore via js/auth.js and js/admin.js.
 </script>
 </body>
 </html>

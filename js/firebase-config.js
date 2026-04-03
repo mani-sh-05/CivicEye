@@ -1,44 +1,36 @@
-// ========================================
-// CivicEye – Firebase Configuration
-// ========================================
-// Replace these with your actual Firebase project config from:
-// Firebase Console → Project Settings → Your Apps → Web App
-
+// js/firebase-config.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 import { getFunctions } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
-// ⚠️  REPLACE  these values with your Firebase project credentials
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey: "AIzaSyAgx-d_GbUdTGJ68XAhH_dDXo_0LoqWofU",
+  authDomain: "civiceye-a9066.firebaseapp.com",
+  projectId: "civiceye-a9066",
+  storageBucket: "civiceye-a9066.firebasestorage.app",
+  messagingSenderId: "337106143583",
+  appId: "1:337106143583:web:952b6defa716ed66dfceea",
+  measurementId: "G-H85NEMG69W"
 };
 
 // Initialize Firebase
-const app       = initializeApp(firebaseConfig);
-const auth      = getAuth(app);
-const db        = getFirestore(app);
-const storage   = getStorage(app);
-const functions = getFunctions(app, "us-central1"); // adjust region if needed
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
+export const functions = getFunctions(app);
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
-// ── Auth state helper ──────────────────────────────────────────
-/**
- * Returns a Promise that resolves with the current user (or null).
- * Waits for Firebase to determine the auth state before resolving.
- */
-function getCurrentUser() {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
+// Auth Helper for waiting on resolution
+export const getCurrentUser = () => {
+    return new Promise((resolve, reject) => {
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            unsubscribe();
+            resolve(user);
+        }, reject);
     });
-  });
-}
-
-export { app, auth, db, storage, functions, getCurrentUser };
+};

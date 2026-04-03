@@ -538,10 +538,10 @@
     <div class="nav-actions">
       <button class="dark-toggle" id="darkToggle" title="Toggle Dark Mode">🌙</button>
       <div class="nav-bell" title="Notifications">🔔<div class="nav-bell-dot"></div></div>
-      <button class="btn-login-nav" id="loginNavBtn" onclick="openLoginModal()" title="Login">
+      <a href="auth.html" class="btn-login-nav" id="loginNavBtn" title="Login" style="text-decoration:none;">
         <span class="btn-login-nav-icon">👤</span>
         <span class="btn-login-nav-text">Login</span>
-      </button>
+      </a>
       <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
       <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
     </div>
@@ -556,7 +556,7 @@
   <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
   <a href="community.html" class="nav-link">🗳️ Community</a>
   <a href="tracker.html"   class="nav-link">📡 Tracker</a>
-  <a href="#" class="nav-link m-modal-login" onclick="openLoginModal();return false;">👤 Login</a>
+  <a href="auth.html" class="nav-link">👤 Login</a>
   <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
   <a href="report.html" class="btn btn-primary" style="width:100%;justify-content:center;">📋 Report an Issue</a>
 </div>
@@ -886,7 +886,7 @@
         <a href="community.html" class="footer-link">🗳️ Community</a>
         <a href="tracker.html"   class="footer-link">📡 Tracker</a>
         <a href="profile.html"   class="footer-link">👤 Profile</a>
-        <a href="admin-login.html" class="footer-link" style="color:var(--accent);font-weight:700;">🛡️ Admin Portal</a>
+        <a href="auth.html" class="footer-link" style="color:var(--accent);font-weight:700;">🛡️ Admin Portal</a>
       </div>
 
       <div>
@@ -915,74 +915,8 @@
   </div>
 </footer>
 
-<script src="js/app.js"></script>
+<script type="module" src="js/app.js"></script>
 
-<!-- ═══════════════════════════════════
-     LOGIN ROLE MODAL
-════════════════════════════════════ -->
-<div class="login-modal-overlay" id="loginModalOverlay" onclick="handleOverlayClick(event)">
-  <div class="login-modal" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
-    <button class="login-modal-close" onclick="closeLoginModal()" aria-label="Close">✕</button>
 
-    <div class="login-modal-header">
-      <div class="login-modal-logo">👁️</div>
-      <h2 class="login-modal-title" id="loginModalTitle">Welcome to CivicEye</h2>
-      <p class="login-modal-subtitle">How would you like to sign in?<br>Choose your role to continue.</p>
-    </div>
-
-    <div class="login-role-cards">
-
-      <!-- Citizen / User Card -->
-      <div class="login-role-card user-card" id="roleUserCard"
-           tabindex="0" role="button" aria-label="Login as Citizen"
-           onclick="goToLogin('auth.html')"
-           onkeydown="if(event.key==='Enter'||event.key===' ')goToLogin('auth.html')">
-        <div class="role-icon-wrap">🧑‍💼</div>
-        <div class="role-label">Citizen</div>
-        <div class="role-desc">Report issues, track complaints &amp; engage with your community.</div>
-        <div class="role-arrow">Sign In →</div>
-      </div>
-
-      <!-- Admin Card -->
-      <div class="login-role-card admin-card" id="roleAdminCard"
-           tabindex="0" role="button" aria-label="Login as Admin"
-           onclick="goToLogin('admin-login.html')"
-           onkeydown="if(event.key==='Enter'||event.key===' ')goToLogin('admin-login.html')">
-        <div class="role-icon-wrap">🛡️</div>
-        <div class="role-label">Admin</div>
-        <div class="role-desc">Municipal control center for managing complaints &amp; resolutions.</div>
-        <div class="role-arrow">Admin Portal →</div>
-      </div>
-
-    </div>
-
-    <div class="login-modal-footer">
-      🔒 Your session is secure &amp; encrypted
-    </div>
-  </div>
-</div>
-
-<script>
-  function openLoginModal() {
-    document.getElementById('loginModalOverlay').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeLoginModal() {
-    document.getElementById('loginModalOverlay').classList.remove('active');
-    document.body.style.overflow = '';
-  }
-  function goToLogin(page) {
-    // Explicitly navigate — bypasses any global <a> click interceptors
-    closeLoginModal();
-    window.location.href = page;
-  }
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('loginModalOverlay')) closeLoginModal();
-  }
-  // Close on Escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeLoginModal();
-  });
-</script>
 </body>
 </html>

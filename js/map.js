@@ -81,8 +81,11 @@ function createUserIcon() {
 }
 
 // Initialize the map
-function initMap(containerId, lat = 30.7046, lng = 76.7179, zoom = 12) {
+function initMap(containerId, defaultLat = 30.7046, defaultLng = 76.7179, zoom = 12) {
   if (civicMap) { civicMap.remove(); civicMap = null; }
+
+  const lat = localStorage.getItem('civiceye_lat') || defaultLat;
+  const lng = localStorage.getItem('civiceye_lng') || defaultLng;
 
   civicMap = L.map(containerId, {
     zoomControl: false,

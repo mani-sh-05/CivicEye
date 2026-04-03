@@ -1,6 +1,8 @@
 // ===========================
 // CivicEye – App Core Utils
 // ===========================
+import { auth } from './firebase-config.js';
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // Dark Mode
 const DarkMode = {
@@ -321,64 +323,84 @@ document.addEventListener('DOMContentLoaded', () => {
   markActiveNav();
   loadUser();
 
+  // Seamless real-time location capture & caching
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      localStorage.setItem('civiceye_lat', pos.coords.latitude);
+      localStorage.setItem('civiceye_lng', pos.coords.longitude);
+      
+      // Attempt to actively seamlessly update local map instance if present
+      if (typeof civicMap !== 'undefined' && civicMap && typeof L !== 'undefined') {
+        civicMap.setView([pos.coords.latitude, pos.coords.longitude], 14);
+      }
+    }, err => console.warn('Seamless location access denied.', err), { maximumAge: 60000 });
+  }
+
   // Dark toggle click
   document.querySelectorAll('.dark-toggle').forEach(btn => {
     btn.addEventListener('click', () => DarkMode.toggle());
   });
 
-  // Auth Protection Logic
+  // Auth Protection Logic via Firebase
   const currentPagePath = window.location.pathname.split('/').pop() || 'index.html';
   const restrictedPages = ['report.html', 'dashboard.html', 'map.html', 'community.html', 'tracker.html', 'profile.html'];
-  
-  // 1. Check on page load
-  if (restrictedPages.includes(currentPagePath) && !localStorage.getItem('civiceye_user_session')) {
-    localStorage.setItem('civiceye_redirect', currentPagePath);
-    window.location.href = 'auth.html';
-  }
 
-  // 2. Intercept link clicks
-  document.addEventListener('click', (e) => {
-    const link = e.target.closest('a');
-    if (!link) return;
-    const href = link.getAttribute('href');
-    if (!href) return;
-    
-    // Allow logout to proceed
-    if (e.target.closest('.logout-btn')) return;
+  onAuthStateChanged(auth, (user) => {
+    const isLoggedIn = !!user;
 
-    if (restrictedPages.some(page => href.includes(page))) {
-      if (!localStorage.getItem('civiceye_user_session')) {
-        e.preventDefault();
-        localStorage.setItem('civiceye_redirect', href);
-        window.location.href = 'auth.html';
+    // 1. Guard restricted pages natively
+    if (restrictedPages.includes(currentPagePath) && !isLoggedIn) {
+      window.location.href = 'auth.html';
+    }
+
+    // 2. Intercept protected links
+    document.removeEventListener('click', linkInterceptor);
+    document.addEventListener('click', linkInterceptor);
+
+    function linkInterceptor(e) {
+      const link = e.target.closest('a');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href) return;
+      
+      if (restrictedPages.some(page => href.includes(page))) {
+        if (!isLoggedIn) {
+          e.preventDefault();
+          window.location.href = 'auth.html';
+        }
+      }
+    }
+
+    // 3. Update Navbars natively
+    updateAuthUI(isLoggedIn);
+  });
+
+  // Handle Logout globally via Firebase
+  document.addEventListener('click', async (e) => {
+    if (e.target.closest('.logout-btn')) {
+      e.preventDefault();
+      try {
+        await signOut(auth);
+        Toast.info('Logged out', 'You have been successfully logged out.');
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 600);
+      } catch (err) {
+        console.error('Logout error', err);
       }
     }
   });
 
-  // Handle Logout globally
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('.logout-btn')) {
-      e.preventDefault();
-      localStorage.removeItem('civiceye_user_session');
-      Toast.info('Logged out', 'You have been successfully logged out.');
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 600);
-    }
-  });
-
   // Auth UI Toggle (Dynamic Navbar)
-  function updateAuthUI() {
-    const isLoggedIn = !!localStorage.getItem('civiceye_user_session');
-
+  function updateAuthUI(isLoggedIn) {
     // Handle Desktop Nav Actions
     document.querySelectorAll('.nav-actions').forEach(nav => {
-      // Our modal-based login button
-      const modalLoginBtn = nav.querySelector('.btn-login-nav');
+      // Login button
+      const modalLoginBtn = nav.querySelector('.btn-login-nav') || nav.querySelector('a[href="auth.html"]:not(.btn-primary)');
       const bell = nav.querySelector('.nav-bell');
       const reportBtn = nav.querySelector('a[href="report.html"].btn');
 
-      // Show Login modal button only when logged out
+      // Show Login button only when logged out
       if (modalLoginBtn) modalLoginBtn.style.display = isLoggedIn ? 'none' : 'flex';
       // Bell and Report only when logged in
       if (bell) bell.style.display = isLoggedIn ? 'flex' : 'none';
@@ -393,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.textContent = 'Log Out';
         logoutBtn.style.padding = '6px 12px';
         if (hamburger) nav.insertBefore(logoutBtn, hamburger);
+        else nav.appendChild(logoutBtn);
       }
       logoutBtn.style.display = isLoggedIn ? 'inline-flex' : 'none';
     });
@@ -402,8 +425,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const reportBtn = mNav.querySelector('a[href="report.html"].btn-primary');
       if (reportBtn) reportBtn.style.display = isLoggedIn ? 'flex' : 'none';
 
-      // Mobile login link (opens modal)
-      const mLoginLink = mNav.querySelector('.m-modal-login');
+      // Mobile login link
+      const mLoginLink = mNav.querySelector('.m-modal-login') || mNav.querySelector('a[href="auth.html"]');
       if (mLoginLink) mLoginLink.style.display = isLoggedIn ? 'none' : 'block';
 
       let mLogoutLink = mNav.querySelector('.m-logout-link');
@@ -419,6 +442,4 @@ document.addEventListener('DOMContentLoaded', () => {
       mLogoutLink.style.display = isLoggedIn ? 'flex' : 'none';
     });
   }
-
-  updateAuthUI();
 });
