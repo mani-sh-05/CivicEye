@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Setup – CivicEye Control Center</title>
+  <meta name="description" content="Configure your admin department and issue category for the CivicEye admin panel." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    .setup-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .setup-bg {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(150deg, #0A0F1E 0%, #0F172A 50%, #0D1B2A 100%);
+      z-index: 0;
+    }
+    .setup-bg-blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(120px); pointer-events: none;
+    }
+    .setup-bg-blob-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(79,70,229,0.20), transparent 70%);
+      top: -200px; right: -100px;
+    }
+    .setup-bg-blob-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(20,184,166,0.18), transparent 70%);
+      bottom: -100px; left: -100px;
+    }
+
+    .setup-card {
+      position: relative;
+      z-index: 10;
+      background: rgba(15,23,42,0.82);
+      backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 28px;
+      padding: 52px 44px;
+      width: 100%;
+      max-width: 580px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 0 60px rgba(79,70,229,0.10);
+      animation: slideUp 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .setup-step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(20,184,166,0.18);
+      border: 1px solid rgba(20,184,166,0.35);
+      color: #2DD4BF;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      padding: 5px 16px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    .setup-header h1 {
+      font-size: 1.9rem;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -0.03em;
+      margin-bottom: 10px;
+    }
+    .setup-header p {
+      font-size: 0.92rem;
+      color: rgba(255,255,255,0.50);
+      line-height: 1.65;
+    }
+
+    .admin-welcome {
+      background: rgba(79,70,229,0.12);
+      border: 1px solid rgba(79,70,229,0.25);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .admin-welcome-avatar {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1E3A8A, #4F46E5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .admin-welcome-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+      margin-bottom: 3px;
+    }
+    .admin-welcome-sub {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .dept-section-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .dept-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .dept-card {
+      position: relative;
+      cursor: pointer;
+      background: rgba(255,255,255,0.04);
+      border: 2px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 20px 18px;
+      transition: all 0.25s ease;
+      text-align: center;
+      overflow: hidden;
+    }
+    .dept-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      border-radius: 14px;
+      transition: opacity 0.25s ease;
+    }
+    .dept-card:hover {
+      border-color: rgba(79,70,229,0.45);
+      background: rgba(79,70,229,0.10);
+      transform: translateY(-3px);
+    }
+    .dept-card.selected {
+      border-color: rgba(79,70,229,0.80);
+      background: rgba(79,70,229,0.18);
+      box-shadow: 0 0 30px rgba(79,70,229,0.25);
+    }
+    .dept-card.selected .dept-check { display: flex; }
+
+    .dept-icon {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      display: block;
+      filter: grayscale(0.2);
+    }
+    .dept-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .dept-desc {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.40);
+      line-height: 1.4;
+    }
+    .dept-check {
+      display: none;
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #4F46E5;
+      align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      color: white;
+      font-weight: 700;
+    }
+
+    /* Color themes per dept */
+    .dept-card[data-dept="Roads"]:hover,
+    .dept-card[data-dept="Roads"].selected { border-color: rgba(245,158,11,0.70); background: rgba(245,158,11,0.10); }
+    .dept-card[data-dept="Roads"].selected  { box-shadow: 0 0 30px rgba(245,158,11,0.20); }
+
+    .dept-card[data-dept="Garbage"]:hover,
+    .dept-card[data-dept="Garbage"].selected { border-color: rgba(34,197,94,0.70); background: rgba(34,197,94,0.10); }
+    .dept-card[data-dept="Garbage"].selected  { box-shadow: 0 0 30px rgba(34,197,94,0.20); }
+
+    .dept-card[data-dept="Water Supply"]:hover,
+    .dept-card[data-dept="Water Supply"].selected { border-color: rgba(59,130,246,0.70); background: rgba(59,130,246,0.10); }
+    .dept-card[data-dept="Water Supply"].selected  { box-shadow: 0 0 30px rgba(59,130,246,0.20); }
+
+    .dept-card[data-dept="Electricity"]:hover,
+    .dept-card[data-dept="Electricity"].selected { border-color: rgba(251,191,36,0.70); background: rgba(251,191,36,0.10); }
+    .dept-card[data-dept="Electricity"].selected  { box-shadow: 0 0 30px rgba(251,191,36,0.20); }
+
+    .dept-card[data-dept="Others"]:hover,
+    .dept-card[data-dept="Others"].selected { border-color: rgba(168,85,247,0.70); background: rgba(168,85,247,0.10); }
+    .dept-card[data-dept="Others"].selected  { box-shadow: 0 0 30px rgba(168,85,247,0.20); }
+
+    .save-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #1E3A8A, #4F46E5);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 28px rgba(79,70,229,0.45);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(79,70,229,0.60); }
+    .save-btn:disabled { opacity: 0.45; pointer-events: none; }
+
+    #admin-toast-container {
+      position: fixed;
+      top: 24px; right: 24px;
+      z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .admin-toast {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 18px;
+      background: rgba(15,23,42,0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.50);
+      min-width: 300px;
+      animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      border-left: 4px solid #22C55E;
+    }
+    .admin-toast-title { font-weight: 700; font-size: 0.9rem; color: white; }
+    .admin-toast-msg { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .admin-toast.hiding { animation: toastOut 0.25s ease forwards; }
+
+    @media (max-width: 480px) {
+      .dept-grid { grid-template-columns: 1fr; }
+      .setup-card { padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="setup-bg">
+  <div class="setup-bg-blob setup-bg-blob-1"></div>
+  <div class="setup-bg-blob setup-bg-blob-2"></div>
+</div>
+
+<div id="admin-toast-container"></div>
+
+<div class="setup-page">
+  <div class="setup-card">
+
+    <div class="setup-header">
+      <div class="setup-step-badge">⚙️ First-Time Setup</div>
+      <h1>Select Your Department</h1>
+      <p>Choose the issue category you'll be managing. This determines which civic complaints are assigned to you.</p>
+    </div>
+
+    <div class="admin-welcome" id="adminWelcome">
+      <div class="admin-welcome-avatar">👤</div>
+      <div>
+        <div class="admin-welcome-name" id="adminWelcomeName">Welcome, Admin</div>
+        <div class="admin-welcome-sub">Please configure your profile to continue</div>
+      </div>
+    </div>
+
+    <div class="dept-section-label">🏢 Choose Your Department</div>
+
+    <div class="dept-grid" id="deptGrid">
+      <div class="dept-card" data-dept="Roads">
+        <div class="dept-check">✓</div>
+        <span class="dept-icon">🛣️</span>
+        <div class="dept-name">Roads & Potholes</div>
+        <div class="dept-desc">Manage road damage, potholes, and infrastructure issues</div>
+      </div>
+
+      <div class="dept-card" data-dept="Garbage">
+        <div class="dept-check">✓</div>
+        <span class="dept-icon">🗑️</span>
+        <div class="dept-name">Garbage & Sanitation</div>
+        <div class="dept-desc">Handle waste management and cleanliness complaints</div>
+      </div>
+
+      <div class="dept-card" data-dept="Water Supply">
+        <div class="dept-check">✓</div>
+        <span class="dept-icon">💧</span>
+        <div class="dept-name">Water Supply</div>
+        <div class="dept-desc">Oversee water shortages, pipe leaks, and supply issues</div>
+      </div>
+
+      <div class="dept-card" data-dept="Electricity">
+        <div class="dept-check">✓</div>
+        <span class="dept-icon">⚡</span>
+        <div class="dept-name">Electricity</div>
+        <div class="dept-desc">Manage power outages and electrical infrastructure faults</div>
+      </div>
+
+      <div class="dept-card" data-dept="Others" style="grid-column: 1 / -1;">
+        <div class="dept-check">✓</div>
+        <span class="dept-icon">🏛️</span>
+        <div class="dept-name">General / Others</div>
+        <div class="dept-desc">Handle miscellaneous civic issues not covered by other departments</div>
+      </div>
+    </div>
+
+    <button class="save-btn" id="saveBtn" disabled>
+      🚀 Save & Enter Admin Panel
+    </button>
+
+  </div>
+</div>
+
+<script>
+  // Auth guard
+  const adminData = JSON.parse(localStorage.getItem('civiceye_admin') || 'null');
+  if (!adminData || !adminData.loggedIn) {
+    window.location.href = 'admin-login.html';
+  } else {
+    document.getElementById('adminWelcomeName').textContent = `Welcome, ${adminData.name}!`;
+  }
+
+  let selectedDept = null;
+
+  function showToast(title, msg) {
+    const c = document.getElementById('admin-toast-container');
+    const t = document.createElement('div');
+    t.className = 'admin-toast';
+    t.innerHTML = `<div><div class="admin-toast-title">${title}</div><div class="admin-toast-msg">${msg}</div></div>`;
+    c.appendChild(t);
+    setTimeout(() => { t.classList.add('hiding'); setTimeout(() => t.remove(), 300); }, 3000);
+  }
+
+  document.querySelectorAll('.dept-card').forEach(card => {
+    card.addEventListener('click', function() {
+      document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      selectedDept = this.dataset.dept;
+      document.getElementById('saveBtn').disabled = false;
+    });
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    if (!selectedDept) return;
+
+    const profile = {
+      department: selectedDept,
+      setupComplete: true,
+      setupTime: Date.now()
+    };
+    localStorage.setItem('civiceye_admin_profile', JSON.stringify(profile));
+
+    showToast('✅ Profile Saved!', `You're now managing the ${selectedDept} department.`);
+
+    this.textContent = '✅ Redirecting…';
+    setTimeout(() => {
+      window.location.href = 'admin-panel.html';
+    }, 900);
+  });
+</script>
+</body>
+</html>
