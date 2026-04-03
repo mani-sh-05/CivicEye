@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community Voting – CivicEye</title>
+  <meta name="description" content="Upvote civic issues, prioritize community concerns and highlight high-impact complaints that need immediate attention." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗳️</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    .community-layout { display: grid; grid-template-columns: 1fr 300px; gap: 28px; align-items: start; }
+    .sidebar-sticky    { position: sticky; top: calc(var(--nav-height) + 24px); }
+
+    /* Sort bar */
+    .sort-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .sort-btn {
+      padding: 7px 16px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem; font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      color: var(--text-muted);
+    }
+    .sort-btn.active, .sort-btn:hover { border-color:var(--secondary); background:rgba(79,70,229,0.08); color:var(--secondary); }
+
+    /* Vote cards */
+    .vote-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .vote-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: rgba(79,70,229,0.18); }
+    .vote-card.priority-high::before {
+      content: 'HIGH PRIORITY';
+      position: absolute; top: 0; right: 0;
+      background: var(--danger); color: white;
+      font-size: 0.62rem; font-weight: 800;
+      padding: 4px 12px; letter-spacing: 0.10em;
+      border-radius: 0 var(--radius-lg) 0 var(--radius-md);
+    }
+
+    /* Vote column */
+    .vote-col {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px; min-width: 58px;
+    }
+    .vote-count {
+      font-size: 1.55rem; font-weight: 900;
+      font-family: 'Poppins', sans-serif; line-height: 1;
+    }
+    .vote-up-btn {
+      width: 46px; height: 46px;
+      border-radius: 13px;
+      border: 2px solid var(--border);
+      background: transparent;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vote-up-btn:hover  { border-color:var(--secondary); background:rgba(79,70,229,0.08); transform:scale(1.1); }
+    .vote-up-btn.voted  { border-color:var(--secondary); background:var(--secondary); color:white; box-shadow:0 4px 14px rgba(79,70,229,0.35); }
+
+    /* Leaderboard */
+    .leaderboard-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: var(--radius-md);
+      border: 1px solid var(--border); margin-bottom: 8px;
+      transition: var(--transition-fast);
+      background: rgba(255,255,255,0.40);
+    }
+    [data-theme="dark"] .leaderboard-item { background: rgba(15,23,42,0.40); }
+    .leaderboard-item:hover { border-color:rgba(79,70,229,0.22); background:rgba(79,70,229,0.04); }
+    .rank-badge {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.82rem; flex-shrink: 0;
+    }
+
+    @media (max-width: 900px) { .community-layout { grid-template-columns:1fr; } .sidebar-sticky { position:static; } }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">👁️</div><span class="nav-logo-text">CivicEye</span><span class="nav-logo-tag">BETA</span></a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link">🏠 Home</a>
+      <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+      <a href="report.html"    class="nav-link">📋 Report</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="community.html" class="nav-link active">🗳️ Community</a>
+      <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle">🌙</button>
+      <a href="profile.html" class="nav-avatar">R</a>
+      <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
+      <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html"     class="nav-link">🏠 Home</a>
+  <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+  <a href="report.html"    class="nav-link">📋 Report Issue</a>
+  <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  <a href="community.html" class="nav-link">🗳️ Community</a>
+  <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+  <a href="profile.html"   class="nav-link">👤 Profile</a>
+</div>
+<div id="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="container" style="padding-top:32px;padding-bottom:60px;">
+
+    <!-- Header -->
+    <div style="margin-bottom:28px;">
+      <div class="section-tag" style="margin-bottom:10px;">🗳️ Community</div>
+      <h1 style="font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;margin-bottom:6px;letter-spacing:-0.03em;">Community Voting</h1>
+      <p style="color:var(--text-muted);">Upvote the issues that matter most. High-vote complaints get <strong>priority resolution</strong> from municipal departments.</p>
+    </div>
+
+    <!-- Sort & Filter bar -->
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+      <div class="sort-bar" style="margin-bottom:0;">
+        <button class="sort-btn active" data-sort="votes">🔥 Top Voted</button>
+        <button class="sort-btn" data-sort="recent">🕐 Recent</button>
+        <button class="sort-btn" data-sort="pending">⏳ Pending</button>
+        <button class="sort-btn" data-sort="delayed">🚨 Delayed</button>
+      </div>
+      <div class="search-bar" style="max-width:280px;">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="communitySearch" placeholder="Search issues..." />
+      </div>
+    </div>
+
+    <div class="community-layout">
+      <!-- Complaint Cards col -->
+      <div id="complaintCards"></div>
+
+      <!-- Sidebar col -->
+      <div class="sidebar-sticky">
+
+        <!-- Category Filter -->
+        <div class="card-flat" style="margin-bottom:18px;padding:18px;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:14px;">🏷️ Filter by Category</h3>
+          <div style="display:flex;flex-direction:column;gap:5px;" id="catFilters">
+            <button class="sort-btn active" data-cat="all"         style="text-align:left;border-radius:var(--radius-sm);">All Categories</button>
+            <button class="sort-btn"        data-cat="Road"        style="text-align:left;border-radius:var(--radius-sm);">🛣️ Road</button>
+            <button class="sort-btn"        data-cat="Garbage"     style="text-align:left;border-radius:var(--radius-sm);">🗑️ Garbage</button>
+            <button class="sort-btn"        data-cat="Water"       style="text-align:left;border-radius:var(--radius-sm);">💧 Water</button>
+            <button class="sort-btn"        data-cat="Electricity" style="text-align:left;border-radius:var(--radius-sm);">⚡ Electricity</button>
+            <button class="sort-btn"        data-cat="Drainage"    style="text-align:left;border-radius:var(--radius-sm);">🚰 Drainage</button>
+          </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="card-flat" style="margin-bottom:18px;padding:18px;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:14px;">🏆 Top Reporters</h3>
+          <div id="leaderboard"></div>
+        </div>
+
+        <!-- Community Stats -->
+        <div class="card-flat" style="padding:18px;">
+          <h3 style="font-size:0.9rem;font-weight:700;margin-bottom:14px;">📊 Community Stats</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="text-align:center;padding:12px;background:rgba(79,70,229,0.06);border:1px solid rgba(79,70,229,0.12);border-radius:var(--radius-sm);">
+              <div style="font-size:1.4rem;font-weight:900;color:var(--secondary);font-family:'Poppins',sans-serif;">12.4K</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Active Citizens</div>
+            </div>
+            <div style="text-align:center;padding:12px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.12);border-radius:var(--radius-sm);">
+              <div style="font-size:1.4rem;font-weight:900;color:var(--success);font-family:'Poppins',sans-serif;">74%</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Resolution Rate</div>
+            </div>
+            <div style="text-align:center;padding:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);border-radius:var(--radius-sm);">
+              <div style="font-size:1.4rem;font-weight:900;color:#B45309;font-family:'Poppins',sans-serif;">4.2d</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Avg. Response</div>
+            </div>
+            <div style="text-align:center;padding:12px;background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.12);border-radius:var(--radius-sm);">
+              <div style="font-size:1.4rem;font-weight:900;color:var(--accent);font-family:'Poppins',sans-serif;">847</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Votes Today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  let sortBy    = 'votes';
+  let catFilter = 'all';
+  let searchQ   = '';
+  const votedSet = new Set();
+
+  const complaints = [
+    ...SampleComplaints,
+    { id:'C007', title:'No Streetlights – Residential Colony', category:'Electricity',
+      description:'Entire residential colony has no street lighting for 2 weeks. Very unsafe at night for children and women.', status:'delayed', verified:true, votes:94, date:'2026-03-18', userName:'Neha Gupta', location:{lat:30.7250,lng:76.7450} },
+    { id:'C008', title:'Overflowing Manhole – Market Area', category:'Drainage',
+      description:'Manhole overflowing causing sewage on road. Major health hazard near vegetable market used daily by 500+ people.', status:'pending', verified:true, votes:71, date:'2026-04-02', userName:'Suresh Patel', location:{lat:30.7100,lng:76.7300} }
+  ];
+
+  const reporters = [
+    { name:'Rajesh Kumar',  reports:14, score:82, badge:'trusted' },
+    { name:'Priya Sharma',  reports:12, score:91, badge:'elite'   },
+    { name:'Vikram Rao',    reports:9,  score:75, badge:'trusted' },
+    { name:'Neha Gupta',    reports:7,  score:65, badge:'trusted' },
+    { name:'Amit Singh',    reports:4,  score:43, badge:'beginner'}
+  ];
+
+  function getFiltered() {
+    let data = [...complaints];
+    if (catFilter !== 'all') data = data.filter(c => c.category === catFilter);
+    if (searchQ) data = data.filter(c =>
+      c.title.toLowerCase().includes(searchQ) ||
+      c.description.toLowerCase().includes(searchQ)
+    );
+    if (sortBy === 'votes')   data.sort((a,b) => b.votes - a.votes);
+    else if (sortBy === 'recent')  data.sort((a,b) => new Date(b.date) - new Date(a.date));
+    else if (sortBy === 'pending') data = data.filter(c => c.status==='pending').concat(data.filter(c => c.status!=='pending'));
+    else if (sortBy === 'delayed') data = data.filter(c => c.status==='delayed').concat(data.filter(c => c.status!=='delayed'));
+    return data;
+  }
+
+  function renderCards() {
+    const data = getFiltered();
+    const ico  = { pending:'⏳', resolved:'✅', delayed:'🚨', processing:'🔵' };
+    document.getElementById('complaintCards').innerHTML = data.length
+      ? data.map((c, i) => {
+          const voted    = votedSet.has(c.id);
+          const priority = c.votes > 60 ? 'priority-high' : '';
+          return `
+          <div class="vote-card ${priority}" style="animation-delay:${i*0.04}s">
+            <div style="display:flex;gap:18px;align-items:flex-start;">
+              <div class="vote-col">
+                <button class="vote-up-btn ${voted?'voted':''}" onclick="toggleVote('${c.id}',this)" id="vbtn-${c.id}">
+                  ${voted ? '👍' : '👍'}
+                </button>
+                <div class="vote-count" id="vcount-${c.id}" style="color:${voted?'var(--secondary)':'var(--text-primary)'};">
+                  ${c.votes + (voted?1:0)}
+                </div>
+                <div style="font-size:0.68rem;color:var(--text-muted);font-weight:600;">votes</div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px;margin-bottom:9px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <span style="background:rgba(79,70,229,0.08);color:var(--secondary);border:1px solid rgba(79,70,229,0.15);border-radius:20px;padding:2px 10px;font-size:0.72rem;font-weight:700;">${c.category}</span>
+                    ${c.verified
+                      ? '<span class="badge badge-verified" style="font-size:0.68rem;">✓ Verified</span>'
+                      : '<span class="badge badge-suspicious" style="font-size:0.68rem;">⚠ Suspicious</span>'
+                    }
+                    ${c.votes > 60 ? '<span style="background:rgba(239,68,68,0.10);color:#B91C1C;border:1px solid rgba(239,68,68,0.22);border-radius:20px;padding:2px 10px;font-size:0.7rem;font-weight:700;">🔥 Trending</span>' : ''}
+                  </div>
+                  <span class="badge badge-${c.status}">${ico[c.status]||'⚪'} ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span>
+                </div>
+                <div style="font-weight:700;font-size:1rem;margin-bottom:7px;">${c.title}</div>
+                <div style="font-size:0.875rem;color:var(--text-muted);line-height:1.55;margin-bottom:12px;">${c.description}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                  <span style="font-size:0.8rem;color:var(--text-muted);">👤 ${c.userName||'Anonymous'}</span>
+                  <span style="font-size:0.8rem;color:var(--text-muted);">📅 ${c.date}</span>
+                  <button onclick="window.location.href='tracker.html'" style="margin-left:auto;padding:5px 14px;border:1px solid var(--border);border-radius:20px;background:transparent;font-size:0.8rem;font-weight:600;cursor:pointer;color:var(--secondary);transition:var(--transition-fast);" onmouseover="this.style.background='rgba(79,70,229,0.08)'" onmouseout="this.style.background='transparent'">Track →</button>
+                </div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')
+      : '<div class="empty-state"><div class="empty-state-icon">🗳️</div><div class="empty-state-title">No complaints found</div><div class="empty-state-desc">Try a different filter or be the first to report!</div><a href="report.html" class="btn btn-primary btn-sm" style="margin-top:16px;">+ Report Issue</a></div>';
+  }
+
+  function toggleVote(id, btn) {
+    if (votedSet.has(id)) {
+      votedSet.delete(id);
+      btn.classList.remove('voted');
+      Toast.info('Vote Removed', 'Your upvote has been removed.');
+    } else {
+      votedSet.add(id);
+      btn.classList.add('voted');
+      Toast.success('Voted!', 'Your vote helps prioritize this issue.');
+    }
+    const c = complaints.find(x => x.id === id);
+    const delta = votedSet.has(id) ? 1 : -1;
+    const countEl = document.getElementById(`vcount-${id}`);
+    countEl.textContent = c.votes + delta;
+    countEl.style.color = votedSet.has(id) ? 'var(--secondary)' : 'var(--text-primary)';
+  }
+
+  function renderLeaderboard() {
+    const badgeColors = { beginner:'#6B7280', trusted:'#4F46E5', elite:'#B45309' };
+    const rankBg = ['#F59E0B','#94A3B8','#D97706'];
+    document.getElementById('leaderboard').innerHTML = reporters.map((r,i) => `
+      <div class="leaderboard-item">
+        <div class="rank-badge" style="background:${i<3?rankBg[i]:'rgba(79,70,229,0.10)'};color:${i<3?'white':'var(--secondary)'};">${i+1}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:0.875rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">${r.reports} reports</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-weight:900;color:var(--primary);font-size:1rem;">${r.score}</div>
+          <div style="font-size:0.66rem;color:${badgeColors[r.badge]};font-weight:700;">${r.badge.toUpperCase()}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  // Sort buttons
+  document.querySelectorAll('[data-sort]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('[data-sort]').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      sortBy = this.dataset.sort;
+      renderCards();
+    });
+  });
+
+  // Category buttons
+  document.querySelectorAll('[data-cat]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('[data-cat]').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      catFilter = this.dataset.cat;
+      renderCards();
+    });
+  });
+
+  // Search
+  document.getElementById('communitySearch').addEventListener('input', function() {
+    searchQ = this.value.toLowerCase().trim();
+    renderCards();
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderCards();
+    renderLeaderboard();
+  });
+</script>
+</body>
+</html>

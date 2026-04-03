@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile – CivicEye</title>
+  <meta name="description" content="Manage your CivicEye profile, view trust score, badges, and complaint history." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👤</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    .profile-layout { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+    .profile-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-lg); text-align: center; position: sticky; top: calc(var(--nav-height) + 20px); }
+    .avatar-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
+    .avatar-circle { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; color: white; border: 4px solid rgba(79,70,229,0.2); box-shadow: 0 8px 30px rgba(79,70,229,0.25); overflow: hidden; }
+    .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-edit-btn { position: absolute; bottom: 4px; right: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--secondary); color: white; border: 2px solid white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; transition: var(--transition-fast); }
+    .avatar-edit-btn:hover { background: var(--primary); transform: scale(1.1); }
+    .trust-ring-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; margin: 16px 0 8px; }
+    .trust-ring-wrap svg { transform: rotate(-90deg); }
+    .trust-overlay { position: absolute; text-align: center; }
+    .trust-num { font-size: 1.6rem; font-weight: 900; font-family: 'Poppins', sans-serif; color: var(--primary); line-height: 1; }
+    .trust-lbl { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; }
+    .stat-mini-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 16px 0; }
+    .stat-mini { background: rgba(79,70,229,0.06); border: 1px solid rgba(79,70,229,0.1); border-radius: var(--radius-md); padding: 10px; text-align: center; }
+    .stat-mini-val { font-size: 1.3rem; font-weight: 800; color: var(--primary); font-family: 'Poppins', sans-serif; }
+    .stat-mini-lbl { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; }
+    .badge-showcase { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+    .badge-row { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: rgba(255,255,255,0.5); transition: var(--transition-fast); }
+    .badge-row:hover { border-color: rgba(79,70,229,0.2); }
+    .badge-row.earned { border-color: rgba(79,70,229,0.2); background: rgba(79,70,229,0.04); }
+    .badge-icon { width: 40px; height: 40px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+    .main-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: 28px; box-shadow: var(--shadow-md); margin-bottom: 22px; }
+    .tab-nav { display: flex; gap: 4px; margin-bottom: 24px; background: rgba(148,163,184,0.08); border-radius: var(--radius-md); padding: 4px; }
+    .tab-btn { flex: 1; padding: 9px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; transition: var(--transition-fast); font-family: 'Inter', sans-serif; }
+    .tab-btn.active { background: var(--glass-bg); color: var(--secondary); box-shadow: var(--shadow-sm); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+    .activity-table { width: 100%; border-collapse: collapse; }
+    .activity-table th { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; padding: 0 12px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+    .activity-table td { padding: 12px; font-size: 0.875rem; border-bottom: 1px solid rgba(0,0,0,0.04); vertical-align: middle; }
+    .activity-table tr:last-child td { border-bottom: none; }
+    /* Edit modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 0.2s ease; }
+    .modal-overlay.open { display: flex; }
+    .edit-modal { background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto; animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .modal-head { padding: 22px 26px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-bd { padding: 26px; }
+    .modal-ft { padding: 18px 26px 22px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end; }
+    [data-theme="dark"] .badge-row { background: rgba(15,23,42,0.4); }
+    @media (max-width: 880px) { .profile-layout { grid-template-columns: 1fr; } .profile-card { position: static; } }
+    @media (max-width: 480px) { .tab-btn { font-size: 0.8rem; padding: 8px 8px; } }
+  </style>
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">👁️</div><span class="nav-logo-text">CivicEye</span><span class="nav-logo-tag">BETA</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🏠 Home</a>
+      <a href="map.html" class="nav-link">🗺️ Live Map</a>
+      <a href="report.html" class="nav-link">📋 Report</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="community.html" class="nav-link">🗳️ Community</a>
+      <a href="tracker.html" class="nav-link">📡 Tracker</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle">🌙</button>
+      <a href="profile.html" class="nav-avatar">R</a>
+      <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
+      <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div id="toast-container"></div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="edit-modal">
+    <div class="modal-head">
+      <h3 style="font-size:1.15rem;font-weight:800;">✏️ Edit Profile</h3>
+      <button onclick="closeEditModal()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:4px;">✕</button>
+    </div>
+    <div class="modal-bd">
+      <!-- Avatar upload inside modal -->
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="position:relative;display:inline-block;">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:800;color:white;margin:0 auto 10px;overflow:hidden;" id="modalAvatar">R</div>
+          <label style="position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:var(--secondary);color:white;border:2px solid white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.7rem;">
+            📸<input type="file" accept="image/*" style="display:none;" id="modalAvatarInput" onchange="previewModalAvatar(this)" />
+          </label>
+        </div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">Click camera icon to change photo</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input type="text" class="form-input" id="editName" placeholder="Your full name" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address <span class="required">*</span></label>
+        <input type="email" class="form-input" id="editEmail" placeholder="you@example.com" required />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input type="tel" class="form-input" id="editPhone" placeholder="+91 XXXXX XXXXX" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">City / Area</label>
+          <input type="text" class="form-input" id="editCity" placeholder="Chandigarh" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-textarea" id="editBio" rows="3" placeholder="Tell the community about yourself..." maxlength="200"></textarea>
+        <div class="form-hint">Max 200 characters</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">New Password</label>
+          <input type="password" class="form-input" id="editPwd" placeholder="Leave blank to keep" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" class="form-input" id="editPwd2" placeholder="Confirm new password" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary btn-ripple" onclick="saveProfile()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrapper">
+  <div class="container" style="padding-top:32px;padding-bottom:60px;">
+    <div style="margin-bottom:26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="section-tag" style="margin-bottom:8px;">👤 My Account</div>
+        <h1 style="font-size:clamp(1.8rem,4vw,2.4rem);font-weight:800;">Profile & Reputation</h1>
+      </div>
+      <button class="btn btn-primary btn-ripple" onclick="openEditModal()">✏️ Edit Profile</button>
+    </div>
+
+    <div class="profile-layout">
+      <!-- Left: Profile Card -->
+      <div>
+        <div class="profile-card reveal">
+          <div class="avatar-wrap">
+            <div class="avatar-circle" id="profileAvatar">R</div>
+            <button class="avatar-edit-btn" onclick="openEditModal()" title="Edit Profile">✏️</button>
+          </div>
+          <h2 id="profileName" style="font-size:1.25rem;font-weight:800;margin-bottom:4px;">Rajesh Kumar</h2>
+          <p id="profileCity" style="font-size:0.875rem;color:var(--text-muted);margin-bottom:4px;">📍 Chandigarh</p>
+          <p id="profileEmail" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">rajesh.kumar@example.com</p>
+
+          <!-- Trust Score Ring -->
+          <div class="trust-ring-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(148,163,184,0.15)" stroke-width="10"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="url(#trustGrad)" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="314" id="trustCircle"
+                style="stroke-dashoffset:314;transition:stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1);"/>
+              <defs>
+                <linearGradient id="trustGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#1E3A8A"/>
+                  <stop offset="100%" stop-color="#14B8A6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="trust-overlay">
+              <div class="trust-num" id="trustNum">0</div>
+              <div class="trust-lbl">TRUST<br>SCORE</div>
+            </div>
+          </div>
+
+          <div class="stat-mini-row">
+            <div class="stat-mini"><div class="stat-mini-val" id="spTotal">14</div><div class="stat-mini-lbl">Reports</div></div>
+            <div class="stat-mini"><div class="stat-mini-val" style="color:var(--success);" id="spResolved">9</div><div class="stat-mini-lbl">Resolved</div></div>
+            <div class="stat-mini"><div class="stat-mini-val" style="color:var(--warning);" id="spPending">3</div><div class="stat-mini-lbl">Pending</div></div>
+          </div>
+
+          <div id="currentBadge" style="margin:12px 0;"></div>
+          <p id="profileBio" style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px;"></p>
+          <p style="font-size:0.78rem;color:var(--text-light);">Member since <span id="joinDate">January 2026</span></p>
+
+          <!-- Quick Actions -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);">
+            <button class="btn btn-primary btn-ripple" onclick="openEditModal()" style="width:100%;">✏️ Edit Profile</button>
+            <a href="report.html" class="btn btn-ghost" style="width:100%;justify-content:center;">📋 New Report</a>
+          </div>
+        </div>
+
+        <!-- Badge Showcase -->
+        <div class="main-card" style="margin-top:18px;">
+          <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:14px;">🏅 Badges & Achievements</h3>
+          <div class="badge-showcase">
+            <div class="badge-row earned">
+              <div class="badge-icon" style="background:rgba(107,114,128,0.15);">🥈</div>
+              <div><div style="font-weight:700;font-size:0.875rem;">Beginner Reporter</div><div style="font-size:0.75rem;color:var(--text-muted);">Submit your first complaint</div></div>
+              <span style="margin-left:auto;color:var(--success);font-size:1rem;">✅</span>
+            </div>
+            <div class="badge-row earned">
+              <div class="badge-icon" style="background:rgba(79,70,229,0.12);">🏆</div>
+              <div><div style="font-weight:700;font-size:0.875rem;">Trusted Reporter</div><div style="font-size:0.75rem;color:var(--text-muted);">10+ verified complaints, 70+ trust score</div></div>
+              <span style="margin-left:auto;color:var(--success);font-size:1rem;">✅</span>
+            </div>
+            <div class="badge-row" style="opacity:0.55;">
+              <div class="badge-icon" style="background:rgba(245,158,11,0.1);">💎</div>
+              <div><div style="font-weight:700;font-size:0.875rem;">Elite Citizen</div><div style="font-size:0.75rem;color:var(--text-muted);">25+ reports, 90+ trust score — 11 more needed</div></div>
+              <span style="margin-left:auto;color:var(--text-light);font-size:1rem;">🔒</span>
+            </div>
+            <div class="badge-row" style="opacity:0.55;">
+              <div class="badge-icon" style="background:rgba(20,184,166,0.1);">🌟</div>
+              <div><div style="font-weight:700;font-size:0.875rem;">Community Champion</div><div style="font-size:0.75rem;color:var(--text-muted);">500+ community votes received</div></div>
+              <span style="margin-left:auto;color:var(--text-light);font-size:1rem;">🔒</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Tabs -->
+      <div>
+        <div class="main-card">
+          <div class="tab-nav">
+            <button class="tab-btn active" data-tab="activity">📋 My Complaints</button>
+            <button class="tab-btn" data-tab="progress">📈 Progress</button>
+            <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+          </div>
+
+          <!-- Tab: Activity -->
+          <div class="tab-content active" id="tab-activity">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+              <div style="font-weight:700;">My Reported Issues</div>
+              <a href="report.html" class="btn btn-primary btn-sm">+ New Report</a>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="activity-table">
+                <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Status</th><th>Votes</th><th>Date</th><th>Action</th></tr></thead>
+                <tbody id="myComplaintsTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: Progress -->
+          <div class="tab-content" id="tab-progress">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:18px;">📈 Your Impact & Progress</h3>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px;">
+              <div style="background:rgba(79,70,229,0.06);border:1px solid rgba(79,70,229,0.12);border-radius:var(--radius-md);padding:18px;"><div style="font-size:2rem;font-weight:900;color:var(--primary);font-family:'Poppins',sans-serif;" data-count="14">0</div><div style="font-size:0.82rem;color:var(--text-muted);">Total Complaints Filed</div></div>
+              <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.12);border-radius:var(--radius-md);padding:18px;"><div style="font-size:2rem;font-weight:900;color:var(--success);font-family:'Poppins',sans-serif;" data-count="9">0</div><div style="font-size:0.82rem;color:var(--text-muted);">Complaints Resolved</div></div>
+              <div style="background:rgba(20,184,166,0.06);border:1px solid rgba(20,184,166,0.12);border-radius:var(--radius-md);padding:18px;"><div style="font-size:2rem;font-weight:900;color:var(--accent);font-family:'Poppins',sans-serif;" data-count="247">0</div><div style="font-size:0.82rem;color:var(--text-muted);">Community Votes Received</div></div>
+              <div style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.12);border-radius:var(--radius-md);padding:18px;"><div style="font-size:2rem;font-weight:900;color:#B45309;font-family:'Poppins',sans-serif;" data-count="82">0</div><div style="font-size:0.82rem;color:var(--text-muted);">Current Trust Score</div></div>
+            </div>
+            <div style="margin-bottom:16px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.875rem;font-weight:600;margin-bottom:6px;"><span>Progress to Elite badge</span><span style="color:var(--secondary);">14/25 reports</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:56%;"></div></div>
+              <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">11 more verified reports needed to unlock Elite Citizen badge</div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:0.875rem;font-weight:600;margin-bottom:6px;"><span>Trust Score Progress</span><span style="color:var(--accent);">82/100</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:82%;background:linear-gradient(90deg,var(--accent),var(--success));"></div></div>
+            </div>
+          </div>
+
+          <!-- Tab: Settings -->
+          <div class="tab-content" id="tab-settings">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:18px;">⚙️ Account Settings</h3>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(79,70,229,0.04);border:1px solid rgba(79,70,229,0.1);border-radius:var(--radius-md);">
+                <div><div style="font-weight:600;font-size:0.9rem;">🔔 Push Notifications</div><div style="font-size:0.8rem;color:var(--text-muted);">Get alerts on complaint status updates</div></div>
+                <label style="position:relative;width:48px;height:26px;cursor:pointer;">
+                  <input type="checkbox" checked style="display:none;" id="notifToggle" onchange="Toast.info('Notifications', this.checked ? 'Enabled' : 'Disabled')" />
+                  <div style="width:48px;height:26px;background:var(--secondary);border-radius:13px;transition:var(--transition-fast);"></div>
+                  <div style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:white;border-radius:50%;transition:var(--transition-fast);transform:translateX(22px);box-shadow:0 1px 4px rgba(0,0,0,0.2);"></div>
+                </label>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(79,70,229,0.04);border:1px solid rgba(79,70,229,0.1);border-radius:var(--radius-md);">
+                <div><div style="font-weight:600;font-size:0.9rem;">🌙 Dark Mode</div><div style="font-size:0.8rem;color:var(--text-muted);">Toggle dark/light theme</div></div>
+                <button class="dark-toggle" style="border:1px solid var(--border);">🌙</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:rgba(79,70,229,0.04);border:1px solid rgba(79,70,229,0.1);border-radius:var(--radius-md);">
+                <div><div style="font-weight:600;font-size:0.9rem;">🔒 Privacy – Anonymous Reports</div><div style="font-size:0.8rem;color:var(--text-muted);">Keep your name hidden on public listings</div></div>
+                <label style="position:relative;width:48px;height:26px;cursor:pointer;">
+                  <input type="checkbox" style="display:none;" onchange="Toast.info('Privacy', this.checked ? 'Anonymous mode enabled' : 'Anonymous mode disabled')" />
+                  <div style="width:48px;height:26px;background:rgba(148,163,184,0.3);border-radius:13px;transition:var(--transition-fast);"></div>
+                  <div style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:white;border-radius:50%;transition:var(--transition-fast);box-shadow:0 1px 4px rgba(0,0,0,0.2);"></div>
+                </label>
+              </div>
+              <div style="padding:16px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:var(--radius-md);">
+                <div style="font-weight:600;font-size:0.9rem;color:var(--danger);margin-bottom:4px;">⚠️ Danger Zone</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;">These actions are irreversible. Please be careful.</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                  <button class="btn btn-sm" style="background:rgba(239,68,68,0.08);color:#B91C1C;border:1px solid rgba(239,68,68,0.2);" onclick="Toast.warning('Account', 'Contact support to delete your account.')">🗑️ Delete Account</button>
+                  <button class="btn btn-ghost btn-sm" onclick="Toast.info('Logged Out', 'You have been signed out.');setTimeout(()=>window.location.href='index.html',1500)">🚪 Log Out</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+      CounterAnim.initAll();
+    });
+  });
+
+  // Render profile
+  function renderProfile() {
+    document.getElementById('profileName').textContent = currentUser.name;
+    document.getElementById('profileCity').textContent = '📍 ' + (currentUser.city || 'India');
+    document.getElementById('profileEmail').textContent = currentUser.email;
+    document.getElementById('profileBio').textContent = currentUser.bio || '';
+    document.getElementById('joinDate').textContent = currentUser.joinDate;
+    document.getElementById('spTotal').textContent = currentUser.totalComplaints;
+    document.getElementById('spResolved').textContent = currentUser.resolvedComplaints;
+    document.getElementById('spPending').textContent = currentUser.pendingComplaints;
+
+    // Avatar initials
+    const initials = currentUser.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('modalAvatar').textContent = initials;
+    document.querySelector('.nav-avatar').textContent = initials[0];
+
+    // Badge
+    const badges = { beginner:'<span class="rep-badge rep-beginner">🥈 Beginner Reporter</span>', trusted:'<span class="rep-badge rep-trusted">🏆 Trusted Reporter</span>', elite:'<span class="rep-badge rep-elite">💎 Elite Citizen</span>' };
+    document.getElementById('currentBadge').innerHTML = badges[currentUser.badge] || badges.beginner;
+
+    // Trust ring
+    const score = currentUser.trustScore;
+    const circumference = 314;
+    const offset = circumference - (score / 100) * circumference;
+    setTimeout(() => {
+      document.getElementById('trustCircle').style.strokeDashoffset = offset;
+    }, 400);
+
+    // Animate trust number
+    CounterAnim.animate(document.getElementById('trustNum'), score, 1400);
+  }
+
+  // Populate complaints table
+  function renderMyComplaints() {
+    const tbody = document.getElementById('myComplaintsTable');
+    const ico = { pending:'⏳', resolved:'✅', delayed:'🚨', processing:'🔵' };
+    tbody.innerHTML = SampleComplaints.map(c => `
+      <tr>
+        <td style="font-weight:700;color:var(--secondary);font-size:0.8rem;">${c.id}</td>
+        <td style="font-weight:600;">${c.title}</td>
+        <td><span style="background:rgba(79,70,229,0.08);color:var(--secondary);border:1px solid rgba(79,70,229,0.12);border-radius:20px;padding:2px 9px;font-size:0.73rem;font-weight:700;">${c.category}</span></td>
+        <td><span class="badge badge-${c.status}" style="font-size:0.72rem;">${ico[c.status]} ${c.status.charAt(0).toUpperCase()+c.status.slice(1)}</span></td>
+        <td style="font-weight:700;">👍 ${c.votes}</td>
+        <td style="font-size:0.82rem;color:var(--text-muted);">${c.date}</td>
+        <td><a href="tracker.html" style="font-size:0.8rem;font-weight:600;color:var(--secondary);">View →</a></td>
+      </tr>`).join('');
+  }
+
+  // Modal
+  function openEditModal() {
+    document.getElementById('editName').value = currentUser.name;
+    document.getElementById('editEmail').value = currentUser.email;
+    document.getElementById('editPhone').value = currentUser.phone || '';
+    document.getElementById('editCity').value = currentUser.city || '';
+    document.getElementById('editBio').value = currentUser.bio || '';
+    document.getElementById('editModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function saveProfile() {
+    const name = document.getElementById('editName').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const pwd = document.getElementById('editPwd').value;
+    const pwd2 = document.getElementById('editPwd2').value;
+    if (!name) { Toast.error('Name Required', 'Please enter your full name.'); return; }
+    if (!email) { Toast.error('Email Required', 'Please enter your email.'); return; }
+    if (pwd && pwd !== pwd2) { Toast.error('Password Mismatch', 'Passwords do not match.'); return; }
+    currentUser.name = name;
+    currentUser.email = email;
+    currentUser.phone = document.getElementById('editPhone').value;
+    currentUser.city = document.getElementById('editCity').value;
+    currentUser.bio = document.getElementById('editBio').value;
+    saveUser(currentUser);
+    closeEditModal();
+    renderProfile();
+    Toast.success('Profile Updated!', 'Your profile has been saved successfully.');
+  }
+
+  function previewModalAvatar(input) {
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const el = document.getElementById('modalAvatar');
+        el.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+        const pa = document.getElementById('profileAvatar');
+        pa.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderProfile();
+    renderMyComplaints();
+    CounterAnim.initAll();
+  });
+</script>
+</body>
+</html>

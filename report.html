@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report an Issue – CivicEye</title>
+  <meta name="description" content="Submit a civic complaint with image, GPS location and description. AI validates your report instantly." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .report-layout { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
+    .form-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      box-shadow: var(--shadow-xl);
+    }
+    .sidebar-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: calc(var(--nav-height) + 24px);
+    }
+    #reportMap { width:100%; height:250px; border-radius:var(--radius-lg); border:1.5px solid var(--border); overflow:hidden; }
+
+    /* Steps indicator */
+    .step-indicator { display:flex; align-items:center; gap:0; margin-bottom:30px; }
+    .step-ind-item  { display:flex; align-items:center; gap:6px; }
+    .step-ind-num {
+      width:30px; height:30px;
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:0.82rem;
+    }
+    .step-ind-num.done    { background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; box-shadow:0 4px 12px rgba(79,70,229,0.3); }
+    .step-ind-num.active  { background:linear-gradient(135deg,var(--secondary),var(--accent)); color:white; box-shadow:0 4px 12px rgba(79,70,229,0.25); }
+    .step-ind-num.waiting { background:rgba(148,163,184,0.18); color:var(--text-muted); }
+    .step-ind-sep { flex:1; height:2px; background:linear-gradient(90deg,var(--secondary),var(--accent)); opacity:0.22; min-width:24px; }
+
+    /* Category buttons */
+    .cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .cat-btn {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 13px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+    .cat-btn:hover   { border-color:var(--secondary); color:var(--secondary); background:rgba(79,70,229,0.05); transform:translateY(-2px); }
+    .cat-btn.selected{ border-color:var(--secondary); background:rgba(79,70,229,0.10); color:var(--secondary); box-shadow:0 4px 14px rgba(79,70,229,0.18); }
+    .cat-btn span    { display:block; font-size:1.5rem; margin-bottom:5px; }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 38px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(79,70,229,0.02);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag {
+      border-color: var(--secondary);
+      background: rgba(79,70,229,0.06);
+    }
+    .upload-zone input { position:absolute; inset:0; opacity:0; cursor:pointer; z-index:2; }
+
+    /* Image preview */
+    #imgPreviewWrap { display:none; margin-top:16px; position:relative; }
+    #imgPreview     { width:100%; max-height:200px; object-fit:cover; border-radius:var(--radius-md); }
+    .remove-img {
+      position:absolute; top:8px; right:8px;
+      background:rgba(0,0,0,0.65); color:white;
+      border:none; width:28px; height:28px; border-radius:50%;
+      cursor:pointer; font-size:0.85rem;
+      display:flex; align-items:center; justify-content:center;
+      transition:var(--transition-fast);
+    }
+    .remove-img:hover { background:rgba(239,68,68,0.85); }
+
+    /* Priority selectors */
+    .priority-grid { display:flex; gap:10px; }
+    .priority-label { flex:1; cursor:pointer; }
+    .priority-label input[type="radio"] { display:none; }
+    .priority-opt {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 8px;
+      text-align: center;
+      transition: var(--transition-fast);
+    }
+    .priority-label input:checked + .priority-opt {
+      border-color: var(--secondary);
+      background: rgba(79,70,229,0.08);
+      box-shadow: 0 4px 12px rgba(79,70,229,0.15);
+    }
+    .priority-opt:hover { border-color:var(--secondary); }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 6px 22px rgba(79,70,229,0.38);
+    }
+    .submit-btn:hover { transform:translateY(-2px); box-shadow:0 10px 32px rgba(79,70,229,0.50); }
+    .submit-btn:disabled { opacity:0.65; cursor:not-allowed; transform:none; }
+
+    /* Tips list */
+    .tips li { font-size:0.85rem; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:flex-start; gap:8px; line-height:1.55; }
+
+    /* Responsive */
+    @media (max-width: 880px) { .report-layout { grid-template-columns:1fr; } .sidebar-card { position:static; } }
+    @media (max-width: 560px) { .cat-grid { grid-template-columns:repeat(2,1fr); } .form-card { padding:20px; } }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">👁️</div><span class="nav-logo-text">CivicEye</span><span class="nav-logo-tag">BETA</span></a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link">🏠 Home</a>
+      <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+      <a href="report.html"    class="nav-link active">📋 Report</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="community.html" class="nav-link">🗳️ Community</a>
+      <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle">🌙</button>
+      <a href="profile.html" class="nav-avatar">R</a>
+      <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html"     class="nav-link">🏠 Home</a>
+  <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+  <a href="report.html"    class="nav-link">📋 Report Issue</a>
+  <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  <a href="community.html" class="nav-link">🗳️ Community</a>
+  <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+  <a href="profile.html"   class="nav-link">👤 Profile</a>
+</div>
+<div id="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="container" style="padding-top:32px;padding-bottom:60px;">
+
+    <!-- Header -->
+    <div style="margin-bottom:32px;">
+      <div class="section-tag" style="margin-bottom:12px;">📋 Citizen Report</div>
+      <h1 style="font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;margin-bottom:8px;letter-spacing:-0.03em;">Report a Civic Issue</h1>
+      <p style="color:var(--text-muted);">Submit your complaint with evidence. Our AI validates it and routes it to the right department automatically.</p>
+    </div>
+
+    <div class="report-layout">
+      <!-- FORM CARD -->
+      <div class="form-card page-enter">
+        <form id="reportForm" novalidate>
+
+          <!-- Step indicator -->
+          <div class="step-indicator">
+            <div class="step-ind-item">
+              <div class="step-ind-num done">1</div>
+              <span style="font-size:0.82rem;font-weight:600;color:var(--secondary);">Details</span>
+            </div>
+            <div class="step-ind-sep"></div>
+            <div class="step-ind-item">
+              <div class="step-ind-num active">2</div>
+              <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);">Location</span>
+            </div>
+            <div class="step-ind-sep" style="opacity:0.10;"></div>
+            <div class="step-ind-item">
+              <div class="step-ind-num waiting">3</div>
+              <span style="font-size:0.82rem;font-weight:600;color:var(--text-muted);">Submit</span>
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label">Issue Category <span class="required">*</span></label>
+            <div class="cat-grid">
+              <button type="button" class="cat-btn" data-cat="Road"><span>🛣️</span>Road</button>
+              <button type="button" class="cat-btn" data-cat="Garbage"><span>🗑️</span>Garbage</button>
+              <button type="button" class="cat-btn" data-cat="Water"><span>💧</span>Water</button>
+              <button type="button" class="cat-btn" data-cat="Electricity"><span>⚡</span>Electricity</button>
+              <button type="button" class="cat-btn" data-cat="Drainage"><span>🚰</span>Drainage</button>
+              <button type="button" class="cat-btn" data-cat="Other"><span>📌</span>Other</button>
+            </div>
+            <input type="hidden" id="categoryInput" required />
+          </div>
+
+          <!-- Title -->
+          <div class="form-group">
+            <label class="form-label" for="issueTitle">Issue Title <span class="required">*</span></label>
+            <div class="input-group">
+              <span class="input-icon">✏️</span>
+              <input type="text" id="issueTitle" class="form-input" placeholder="e.g. Large pothole on Main Street near the school" maxlength="80" required />
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label" for="issueDesc">Description <span class="required">*</span></label>
+            <textarea id="issueDesc" class="form-textarea" rows="4"
+              placeholder="Describe the issue in detail — location, severity, how long it's been there, impact on residents..."
+              maxlength="500" required></textarea>
+            <div class="form-hint"><span id="descCount">0</span>/500 characters · 50+ words gets priority processing</div>
+          </div>
+
+          <!-- Image Upload -->
+          <div class="form-group">
+            <label class="form-label">Photo Evidence <span class="required">*</span></label>
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" id="imageInput" accept="image/*" />
+              <div id="uploadPlaceholder">
+                <div style="font-size:2.4rem;margin-bottom:10px;">📸</div>
+                <div style="font-weight:600;font-size:0.95rem;color:var(--text-secondary);margin-bottom:4px;">Click or Drag & Drop Image</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">JPG, PNG, WEBP · Max 5MB · Required for AI verification</div>
+              </div>
+            </div>
+            <div id="imgPreviewWrap">
+              <img id="imgPreview" alt="Preview" />
+              <button type="button" class="remove-img" id="removeImg">✕</button>
+            </div>
+          </div>
+
+          <!-- Priority -->
+          <div class="form-group">
+            <label class="form-label">Priority Level</label>
+            <div class="priority-grid">
+              <label class="priority-label">
+                <input type="radio" name="priority" value="low" />
+                <div class="priority-opt">
+                  <div style="font-size:1.3rem;margin-bottom:4px;">🟢</div>
+                  <div style="font-size:0.8rem;font-weight:600;">Low</div>
+                </div>
+              </label>
+              <label class="priority-label">
+                <input type="radio" name="priority" value="medium" checked />
+                <div class="priority-opt" style="border-color:var(--secondary);background:rgba(79,70,229,0.07);">
+                  <div style="font-size:1.3rem;margin-bottom:4px;">🟡</div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--secondary);">Medium</div>
+                </div>
+              </label>
+              <label class="priority-label">
+                <input type="radio" name="priority" value="high" />
+                <div class="priority-opt">
+                  <div style="font-size:1.3rem;margin-bottom:4px;">🔴</div>
+                  <div style="font-size:0.8rem;font-weight:600;">High</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- AI Validation result (shown dynamically) -->
+          <div id="validationBox" style="display:none;"></div>
+
+          <!-- Consent -->
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:24px;padding:14px;background:rgba(79,70,229,0.04);border-radius:var(--radius-md);border:1px solid rgba(79,70,229,0.10);">
+            <input type="checkbox" id="consent" style="margin-top:3px;accent-color:var(--secondary);width:16px;height:16px;" required />
+            <label for="consent" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;line-height:1.6;">
+              I confirm this complaint is genuine and accurate. False reports will lower my trust score and may lead to account suspension per CivicEye's community guidelines.
+            </label>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="submit-btn btn-ripple" id="submitBtn">
+            🚀 Submit Complaint to Authorities
+          </button>
+        </form>
+      </div>
+
+      <!-- SIDEBAR -->
+      <div>
+        <!-- Map Picker -->
+        <div class="sidebar-card" style="margin-bottom:20px;">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:6px;">📍 Select Location</h3>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;">Click on map to pin the issue, or use GPS auto-detect.</p>
+          <div id="reportMap"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-ghost btn-sm" id="gpsBtn" style="flex:1;" onclick="detectLocation()">📡 Auto-Detect GPS</button>
+            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="clearLocation()">✕ Clear</button>
+          </div>
+          <div id="locationDisplay" style="margin-top:12px;font-size:0.82rem;color:var(--text-muted);display:none;">
+            <strong>📍 Selected:</strong> <span id="locationText"></span>
+          </div>
+          <input type="hidden" id="latInput" />
+          <input type="hidden" id="lngInput" />
+        </div>
+
+        <!-- Tips -->
+        <div class="sidebar-card" style="margin-bottom:20px;">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:14px;">💡 Tips for Faster Resolution</h3>
+          <ul class="tips">
+            <li>📸 <span>Clear, well-lit photo increases AI verification score by 40%</span></li>
+            <li>📍 <span>Precise GPS location helps route to the correct department</span></li>
+            <li>📝 <span>Detailed description (50+ words) gets priority processing</span></li>
+            <li>🔁 <span>Repeat issues in same area get auto-escalated to senior officers</span></li>
+            <li>⭐ <span>Higher trust score = faster complaint handling</span></li>
+          </ul>
+        </div>
+
+        <!-- AI Explainer -->
+        <div class="sidebar-card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;">🧠 Smart Filtering & Validation</h3>
+          <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.65;">Our multi-layer AI system checks for:</p>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> Image quality & content verification</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> GPS location cross-reference</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> Description completeness score</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--success);">✅</span> User reputation & history check</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;"><span style="color:var(--danger);">❌</span> Duplicate & spam detection</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
+<script src="js/map.js"></script>
+<script>
+  // Category selection
+  let selectedCategory = '';
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedCategory = btn.dataset.cat;
+      document.getElementById('categoryInput').value = selectedCategory;
+      checkValidation();
+    });
+  });
+
+  // Description counter
+  const descTA = document.getElementById('issueDesc');
+  descTA.addEventListener('input', () => {
+    document.getElementById('descCount').textContent = descTA.value.length;
+    checkValidation();
+  });
+
+  // Image upload
+  const imageInput  = document.getElementById('imageInput');
+  const uploadZone  = document.getElementById('uploadZone');
+  let imageProvided = false;
+
+  imageInput.addEventListener('change', function() { handleFile(this.files[0]); });
+  uploadZone.addEventListener('dragover',  e => { e.preventDefault(); uploadZone.classList.add('drag'); });
+  uploadZone.addEventListener('dragleave', ()=> uploadZone.classList.remove('drag'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) { Toast.warning('File Too Large', 'Max 5MB allowed.'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imgPreview').src = e.target.result;
+      document.getElementById('imgPreviewWrap').style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+      imageProvided = true;
+      checkValidation();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('removeImg').addEventListener('click', () => {
+    document.getElementById('imgPreview').src = '';
+    document.getElementById('imgPreviewWrap').style.display = 'none';
+    document.getElementById('uploadPlaceholder').style.display = 'block';
+    imageInput.value = '';
+    imageProvided = false;
+    checkValidation();
+  });
+
+  // Map init (report page)
+  let reportMap, reportMarker;
+  let selectedLat = null, selectedLng = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    reportMap = L.map('reportMap', { zoomControl: true }).setView([30.7046, 76.7179], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap', maxZoom: 19
+    }).addTo(reportMap);
+    reportMap.on('click', e => {
+      setLocation(e.latlng.lat.toFixed(5), e.latlng.lng.toFixed(5));
+    });
+  });
+
+  function setLocation(lat, lng) {
+    selectedLat = lat; selectedLng = lng;
+    document.getElementById('latInput').value = lat;
+    document.getElementById('lngInput').value = lng;
+    document.getElementById('locationText').textContent = `${lat}, ${lng}`;
+    document.getElementById('locationDisplay').style.display = 'block';
+    if (reportMarker) reportMarker.remove();
+    reportMarker = L.marker([lat, lng]).addTo(reportMap).bindPopup('📍 Issue Location').openPopup();
+    reportMap.setView([lat, lng], 15);
+    checkValidation();
+  }
+
+  function detectLocation() {
+    const btn = document.getElementById('gpsBtn');
+    btn.innerHTML = '⌛ Detecting...';
+    btn.disabled = true;
+    if (!navigator.geolocation) {
+      Toast.error('Not Supported', 'Geolocation not available.');
+      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false; return;
+    }
+    navigator.geolocation.getCurrentPosition(pos => {
+      setLocation(pos.coords.latitude.toFixed(5), pos.coords.longitude.toFixed(5));
+      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false;
+      Toast.success('Location Detected', 'GPS location pinned on map.');
+    }, err => {
+      Toast.error('Location Error', err.message);
+      btn.innerHTML = '📡 Auto-Detect GPS'; btn.disabled = false;
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  }
+
+  function clearLocation() {
+    selectedLat = null; selectedLng = null;
+    document.getElementById('latInput').value = '';
+    document.getElementById('lngInput').value = '';
+    document.getElementById('locationDisplay').style.display = 'none';
+    if (reportMarker) { reportMarker.remove(); reportMarker = null; }
+    checkValidation();
+  }
+
+  // Real-time validation
+  function checkValidation() {
+    const desc = descTA.value;
+    const hasLoc = !!selectedLat;
+    if (!imageProvided && !desc && !hasLoc) { document.getElementById('validationBox').style.display = 'none'; return; }
+    const result = ValidationEngine.analyze(imageProvided, desc, hasLoc);
+    const box = document.getElementById('validationBox');
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div class="validation-indicator ${result.valid ? 'valid' : 'suspicious'}">
+        <div class="validation-icon">${result.valid ? '✅' : '⚠️'}</div>
+        <div style="flex:1;">
+          <div class="validation-title">${result.valid ? '✓ AI Verified' : '⚠ Needs More Evidence'} – ${result.confidence}% Confidence</div>
+          <div class="validation-desc">${result.reason}</div>
+        </div>
+        <span style="padding:4px 12px;border-radius:20px;font-size:0.72rem;font-weight:700;white-space:nowrap;background:${result.valid?'rgba(34,197,94,0.14)':'rgba(239,68,68,0.12)'};color:${result.valid?'#15803D':'#B91C1C'};">${result.label}</span>
+      </div>`;
+  }
+
+  // Form submit
+  document.getElementById('reportForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const title   = document.getElementById('issueTitle').value.trim();
+    const desc    = descTA.value.trim();
+    const consent = document.getElementById('consent').checked;
+    if (!selectedCategory)           { Toast.error('Missing Category', 'Please select an issue category.'); return; }
+    if (!title)                       { Toast.error('Missing Title', 'Please enter an issue title.'); return; }
+    if (!desc || desc.length < 20)    { Toast.error('Description Too Short', 'Provide at least 20 characters.'); return; }
+    if (!imageProvided)               { Toast.warning('No Image', 'Adding an image increases verification score significantly.'); }
+    if (!consent)                     { Toast.error('Consent Required', 'Please confirm the complaint is genuine.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '⌛ Submitting & Validating...';
+    btn.disabled = true;
+    btn.style.background = 'linear-gradient(135deg,#6366F1,#14B8A6)';
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    btn.innerHTML = '✅ Submitted Successfully!';
+    btn.style.background = 'linear-gradient(135deg,#15803D,#22C55E)';
+    Toast.success('Complaint Submitted!', 'Report ID: CE-' + Date.now().toString().slice(-6) + ' · Routing to department...');
+    setTimeout(() => { window.location.href = 'tracker.html'; }, 2400);
+  });
+</script>
+</body>
+</html>

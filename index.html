@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CivicEye – From Complaints to Change | Trust-Driven Civic Platform</title>
+  <meta name="description" content="CivicEye is India's first AI-powered, trust-driven civic reporting platform. Report issues, vote on community priorities, and hold authorities accountable." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: var(--nav-height);
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 440px;
+      gap: 48px;
+      align-items: center;
+      width: 100%;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(30,58,138,0.08), rgba(79,70,229,0.08));
+      border: 1px solid rgba(79,70,229,0.20);
+      color: var(--secondary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      border-radius: var(--radius-full);
+      margin-bottom: 22px;
+    }
+    .hero-title {
+      font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 22px;
+      letter-spacing: -0.04em;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(135deg, var(--primary), var(--secondary) 50%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.80;
+      margin-bottom: 38px;
+      max-width: 520px;
+    }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 52px; }
+    .hero-stats   { display: flex; gap: 40px; flex-wrap: wrap; }
+    .hero-stat-num {
+      font-size: 2.2rem;
+      font-weight: 900;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-stat-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 500; }
+
+    /* Hero Visual */
+    .hero-visual {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-xl);
+    }
+    .city-map-box {
+      width: 100%;
+      height: 230px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #E0E7FF 0%, #DBEAFE 50%, #D1FAE5 100%);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+    [data-theme="dark"] .city-map-box {
+      background: linear-gradient(135deg, #1E1B4B 0%, #0F172A 50%, #0D2A1F 100%);
+    }
+    .map-grid-lines {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(79,70,229,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,70,229,0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .road-h { position: absolute; left: 0; right: 0; height: 3px; background: rgba(79,70,229,0.18); }
+    .road-v { position: absolute; top: 0; bottom: 0; width: 3px; background: rgba(79,70,229,0.18); }
+    .mpin {
+      position: absolute;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 2.5px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      transform: translate(-50%,-50%);
+    }
+    .stat-mini-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .stat-mini {
+      text-align: center;
+      padding: 10px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid;
+    }
+    .stat-mini-num { font-size: 1.25rem; font-weight: 900; font-family: 'Poppins',sans-serif; line-height: 1; }
+    .stat-mini-lbl { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+
+    /* Feature badge strip */
+    .feature-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(79,70,229,0.06);
+      border: 1px solid rgba(79,70,229,0.12);
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--secondary);
+    }
+
+    /* ── Features Grid ── */
+    .features-6 { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+    .feature-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 16px;
+    }
+
+    /* ── Steps ── */
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(4,1fr);
+      gap: 20px;
+      position: relative;
+    }
+    .steps-row::before {
+      content: '';
+      position: absolute;
+      top: 27px;
+      left: 12.5%;
+      right: 12.5%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      opacity: 0.18;
+    }
+    .step { text-align: center; position: relative; z-index: 1; }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      margin: 0 auto 16px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      font-weight: 800;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(79,70,229,0.35);
+    }
+
+    /* ── USP 2x2 ── */
+    .usp-2x2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 22px; }
+    .usp-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+    }
+    .usp-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); border-color: rgba(79,70,229,0.20); }
+    .usp-icon {
+      width: 56px; height: 56px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 18px;
+    }
+
+    /* ── Testimonial ── */
+    .testimonial-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 22px; }
+    .testimonial-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stars { color: #F59E0B; font-size: 0.9rem; margin-bottom: 12px; }
+    .testimonial-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 18px; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: 12px; }
+    .testimonial-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: 700; font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+
+    /* ── CTA Band ── */
+    .cta-band {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 55%, var(--accent) 100%);
+      border-radius: var(--radius-2xl);
+      padding: 72px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-2xl);
+    }
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.5' fill='rgba(255,255,255,0.08)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border-top: 1px solid var(--border);
+      padding: 64px 0 32px;
+    }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+    .footer-link {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 10px;
+      transition: var(--transition-fast);
+    }
+    .footer-link:hover { color: var(--secondary); padding-left: 4px; }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      margin-top: 48px;
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1000px) {
+      .hero-grid    { grid-template-columns: 1fr; }
+      .hero-visual  { display: none; }
+      .features-6, .steps-row { grid-template-columns: repeat(2,1fr); }
+      .steps-row::before { display: none; }
+      .footer-grid  { grid-template-columns: repeat(2,1fr); }
+      .testimonial-grid { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 620px) {
+      .features-6, .usp-2x2, .steps-row { grid-template-columns: 1fr; }
+      .testimonial-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .cta-band    { padding: 48px 24px; }
+      .hero-stats  { gap: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     NAVBAR
+════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">👁️</div>
+      <span class="nav-logo-text">CivicEye</span>
+      <span class="nav-logo-tag">BETA</span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link active">🏠 Home</a>
+      <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+      <a href="report.html"    class="nav-link">📋 Report</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="community.html" class="nav-link">🗳️ Community</a>
+      <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" id="darkToggle" title="Toggle Dark Mode">🌙</button>
+      <div class="nav-bell" title="Notifications">🔔<div class="nav-bell-dot"></div></div>
+      <a href="profile.html" class="nav-avatar" title="My Profile">R</a>
+      <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
+      <button class="nav-hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html"     class="nav-link">🏠 Home</a>
+  <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+  <a href="report.html"    class="nav-link">📋 Report Issue</a>
+  <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  <a href="community.html" class="nav-link">🗳️ Community</a>
+  <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+  <a href="profile.html"   class="nav-link">👤 Profile</a>
+  <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
+  <a href="report.html" class="btn btn-primary" style="width:100%;justify-content:center;">📋 Report an Issue</a>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════
+     HERO SECTION
+════════════════════════════════════ -->
+<section class="hero">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="container" style="width:100%;position:relative;z-index:2;">
+    <div class="hero-grid">
+      <!-- Left: Content -->
+      <div class="hero-content">
+        <div class="hero-eyebrow hero-animate hero-animate-1">🏆 Hackathon 2026 · SVIET PTU · India</div>
+        <h1 class="hero-title hero-animate hero-animate-2">
+          From <span class="highlight">Complaints</span><br>
+          to Real <span class="highlight">Change</span>
+        </h1>
+        <p class="hero-desc hero-animate hero-animate-3">
+          India's first trust-driven civic platform. Citizens report issues, AI validates them,
+          communities vote on priority — and authorities are <strong>held accountable</strong>.
+        </p>
+
+        <div class="hero-actions hero-animate hero-animate-4">
+          <a href="report.html" class="btn btn-primary btn-lg btn-ripple">
+            📋 Report an Issue
+          </a>
+          <a href="map.html" class="btn btn-secondary btn-lg">
+            🗺️ View Live Map
+          </a>
+        </div>
+
+        <div class="hero-stats hero-animate hero-animate-5">
+          <div>
+            <div class="hero-stat-num" data-count="2471">0</div>
+            <div class="hero-stat-label">Issues Reported</div>
+          </div>
+          <div>
+            <div class="hero-stat-num" data-count="1834">0</div>
+            <div class="hero-stat-label">Resolved</div>
+          </div>
+          <div>
+            <div class="hero-stat-num" data-count="12400">0</div>
+            <div class="hero-stat-label">Active Citizens</div>
+          </div>
+        </div>
+
+        <div class="feature-strip hero-animate hero-animate-5" style="margin-top:28px;">
+          <span class="feature-pill">🤖 AI Validation</span>
+          <span class="feature-pill">📡 GPS Tracking</span>
+          <span class="feature-pill">🗺️ Live Map</span>
+          <span class="feature-pill">⭐ Trust Scores</span>
+        </div>
+      </div>
+
+      <!-- Right: Visual Card -->
+      <div class="hero-visual float-slow">
+        <div class="hero-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <span style="font-weight:700;font-size:0.9rem;">🗺️ Live Issue Map</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:0.72rem;font-weight:700;background:rgba(34,197,94,0.12);color:#15803D;border:1px solid rgba(34,197,94,0.25);padding:3px 10px;border-radius:20px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulse 2s infinite;"></span> Live
+            </span>
+          </div>
+
+          <div class="city-map-box">
+            <div class="map-grid-lines"></div>
+            <div class="road-h" style="top:33%;"></div>
+            <div class="road-h" style="top:64%;"></div>
+            <div class="road-v" style="left:38%;"></div>
+            <div class="road-v" style="left:67%;"></div>
+            <!-- Pins -->
+            <div class="mpin" style="background:#F59E0B;top:33%;left:38%;animation:pulse 2s infinite;"></div>
+            <div class="mpin" style="background:#22C55E;top:52%;left:64%;"></div>
+            <div class="mpin" style="background:#EF4444;top:65%;left:27%;animation:pulse 2.5s infinite;"></div>
+            <div class="mpin" style="background:#3B82F6;top:24%;left:70%;"></div>
+            <div class="mpin" style="background:#F59E0B;top:76%;left:53%;animation:pulse 3s infinite;"></div>
+            <div class="mpin" style="background:#22C55E;top:43%;left:48%;"></div>
+            <!-- Heat zone overlay -->
+            <div style="position:absolute;top:20%;left:24%;width:90px;height:70px;background:radial-gradient(circle at center,rgba(239,68,68,0.18),transparent);border-radius:50%;pointer-events:none;"></div>
+          </div>
+
+          <div class="stat-mini-row">
+            <div class="stat-mini" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.20);">
+              <div class="stat-mini-num" style="color:#B45309;">8</div>
+              <div class="stat-mini-lbl">Pending</div>
+            </div>
+            <div class="stat-mini" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.20);">
+              <div class="stat-mini-num" style="color:#15803D;">23</div>
+              <div class="stat-mini-lbl">Resolved</div>
+            </div>
+            <div class="stat-mini" style="background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.20);">
+              <div class="stat-mini-num" style="color:#B91C1C;">3</div>
+              <div class="stat-mini-lbl">Delayed</div>
+            </div>
+          </div>
+
+          <!-- Recent activity mini feed -->
+          <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Recent Activity</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;">
+                <span style="width:8px;height:8px;border-radius:50%;background:#22C55E;flex-shrink:0;"></span>
+                <span style="font-weight:600;">Pothole fixed</span>
+                <span style="color:var(--text-muted);margin-left:auto;">2 min ago</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;">
+                <span style="width:8px;height:8px;border-radius:50%;background:#F59E0B;flex-shrink:0;"></span>
+                <span style="font-weight:600;">New complaint filed</span>
+                <span style="color:var(--text-muted);margin-left:auto;">8 min ago</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:0.78rem;">
+                <span style="width:8px;height:8px;border-radius:50%;background:#4F46E5;flex-shrink:0;"></span>
+                <span style="font-weight:600;">AI verified report</span>
+                <span style="color:var(--text-muted);margin-left:auto;">15 min ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating mini card -->
+        <div style="position:absolute;bottom:-20px;left:-24px;background:var(--glass-bg);backdrop-filter:var(--glass-blur);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:12px 16px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#22C55E,#16A34A);display:flex;align-items:center;justify-content:center;font-size:1.1rem;">✅</div>
+          <div>
+            <div style="font-weight:700;font-size:0.82rem;">AI Verified!</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">92% confidence score</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FEATURES
+════════════════════════════════════ -->
+<section class="section">
+  <div class="container">
+    <div class="text-center mb-32">
+      <div class="section-tag reveal">⚡ Platform Features</div>
+      <h2 class="section-title reveal">Why Choose CivicEye?</h2>
+      <p class="section-subtitle reveal">Built on trust, powered by AI — every feature designed to bring real, measurable change to your city.</p>
+    </div>
+    <div class="features-6">
+      <a href="report.html" class="card reveal reveal-delay-1" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(79,70,229,0.08);">
+          <span class="feature-icon">🧠</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Smart AI Validation</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Multi-layer AI filters fake complaints instantly. Only genuine issues pass.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:rgba(34,197,94,0.10);color:#15803D;border:1px solid rgba(34,197,94,0.22);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">✓ Verified</span>
+          <span style="background:rgba(239,68,68,0.08);color:#B91C1C;border:1px solid rgba(239,68,68,0.20);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">⚠ Suspicious</span>
+        </div>
+      </a>
+
+      <a href="map.html" class="card reveal reveal-delay-2" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(20,184,166,0.08);">
+          <span class="feature-icon">🗺️</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Real-Time Live Map</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">OpenStreetMap + Leaflet.js shows every complaint as a live pin.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:rgba(79,70,229,0.08);color:var(--secondary);border:1px solid rgba(79,70,229,0.15);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">📍 GPS Auto-detect</span>
+          <span style="background:rgba(79,70,229,0.08);color:var(--secondary);border:1px solid rgba(79,70,229,0.15);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">🔵 Clustering</span>
+        </div>
+      </a>
+
+      <a href="profile.html" class="card reveal reveal-delay-3" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(245,158,11,0.08);">
+          <span class="feature-icon">🏆</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Reputation System</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">Earn trust scores with accurate reports. Higher reputation = faster approvals.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:rgba(107,114,128,0.10);color:#6B7280;border:1px solid rgba(107,114,128,0.20);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">🥈 Beginner</span>
+          <span style="background:rgba(79,70,229,0.08);color:var(--secondary);border:1px solid rgba(79,70,229,0.15);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">🥇 Trusted</span>
+          <span style="background:rgba(245,158,11,0.10);color:#B45309;border:1px solid rgba(245,158,11,0.22);border-radius:20px;padding:3px 10px;font-size:0.72rem;font-weight:700;">💎 Elite</span>
+        </div>
+      </a>
+
+      <a href="dashboard.html" class="card reveal reveal-delay-1" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(30,58,138,0.08);">
+          <span class="feature-icon">📊</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Transparency Dashboard</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.6;">Charts, heatmaps, SLA tracking. Detect delayed resolutions and hold municipal departments accountable publicly.</p>
+      </a>
+
+      <a href="community.html" class="card reveal reveal-delay-2" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(34,197,94,0.08);">
+          <span class="feature-icon">🗳️</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Community Voting</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.6;">Citizens upvote what matters most. High-vote complaints are auto-prioritized for faster government action.</p>
+      </a>
+
+      <a href="tracker.html" class="card reveal reveal-delay-3" style="text-decoration:none;color:inherit;display:block;">
+        <div class="feature-icon-wrap" style="background:rgba(239,68,68,0.07);">
+          <span class="feature-icon">📡</span>
+        </div>
+        <h3 style="font-size:1.05rem;margin-bottom:8px;">Complaint Timeline</h3>
+        <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.6;">Full lifecycle from submission to resolution. Automatic SLA breach alerts when authorities delay action.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     TESTIMONIALS
+════════════════════════════════════ -->
+<section class="section" style="background:linear-gradient(135deg,rgba(20,184,166,0.03),rgba(79,70,229,0.03));">
+  <div class="container">
+    <div class="text-center mb-32">
+      <div class="section-tag reveal">💬 What Citizens Say</div>
+      <h2 class="section-title reveal">Making Cities Better, Together</h2>
+    </div>
+    <div class="testimonial-grid">
+      <div class="testimonial-card reveal reveal-delay-1">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"I reported a dangerous pothole near my school. Within 3 days it was fixed! CivicEye actually works – I can't believe how fast the municipality responded."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div style="font-weight:700;font-size:0.875rem;">Rajesh Kumar</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">Trusted Reporter · Chandigarh</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-2">
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">"The AI verification is incredible. It knew my photo was genuine and gave a 94% confidence score. My complaint was escalated in minutes. This is the future of governance."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">P</div>
+          <div>
+            <div style="font-weight:700;font-size:0.875rem;">Priya Sharma</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">Elite Contributor · Mohali</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal reveal-delay-3">
+        <div class="stars">★★★★☆</div>
+        <p class="testimonial-text">"Finally a platform that doesn't just collect complaints — it actually shows you what happened. The transparency tracker kept me updated at every step."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">V</div>
+          <div>
+            <div style="font-weight:700;font-size:0.875rem;">Vikram Rao</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">Trusted Reporter · Panchkula</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     CTA BAND
+════════════════════════════════════ -->
+<section style="padding:0 0 88px;">
+  <div class="container">
+    <div class="cta-band reveal">
+      <div style="position:relative;z-index:1;">
+        <div style="font-size:3rem;margin-bottom:16px;">👁️</div>
+        <h2 style="font-size:clamp(1.7rem,4vw,2.8rem);margin-bottom:14px;font-family:'Poppins',sans-serif;font-weight:900;color:white;letter-spacing:-0.03em;">Be the Change Your City Needs</h2>
+        <p style="font-size:1.05rem;max-width:500px;margin:0 auto 36px;color:rgba(255,255,255,0.85);line-height:1.7;">Join 12,400+ active citizens already using CivicEye. Every complaint counts — your voice drives real municipal action.</p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+          <a href="report.html" class="btn btn-lg btn-ripple" style="background:white;color:var(--primary);font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,0.25);">
+            📋 Report Your First Issue
+          </a>
+          <a href="map.html" class="btn btn-lg" style="background:rgba(255,255,255,0.14);color:white;border:2px solid rgba(255,255,255,0.38);backdrop-filter:blur(10px);">
+            🗺️ Explore Live Map
+          </a>
+        </div>
+        <!-- Trust indicators -->
+        <div style="display:flex;gap:32px;justify-content:center;margin-top:36px;flex-wrap:wrap;">
+          <div style="text-align:center;color:rgba(255,255,255,0.80);">
+            <div style="font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;">74%</div>
+            <div style="font-size:0.8rem;">Resolution Rate</div>
+          </div>
+          <div style="text-align:center;color:rgba(255,255,255,0.80);">
+            <div style="font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;">4.2d</div>
+            <div style="font-size:0.8rem;">Avg. Response Time</div>
+          </div>
+          <div style="text-align:center;color:rgba(255,255,255,0.80);">
+            <div style="font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;">6</div>
+            <div style="font-size:0.8rem;">Cities Covered</div>
+          </div>
+          <div style="text-align:center;color:rgba(255,255,255,0.80);">
+            <div style="font-size:1.6rem;font-weight:900;font-family:'Poppins',sans-serif;">98%</div>
+            <div style="font-size:0.8rem;">AI Accuracy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════
+     FOOTER
+════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a href="index.html" class="nav-logo" style="margin-bottom:16px;display:inline-flex;">
+          <div class="nav-logo-icon">👁️</div>
+          <span class="nav-logo-text">CivicEye</span>
+        </a>
+        <p style="font-size:0.875rem;color:var(--text-muted);line-height:1.75;margin-top:12px;max-width:280px;">
+          A Trust-Driven Civic Platform connecting citizens with authorities for faster, transparent issue resolution across Indian cities.
+        </p>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;transition:var(--transition-fast);" onmouseover="this.style.borderColor='var(--secondary)'" onmouseout="this.style.borderColor='var(--border)'" title="Twitter">🐦</button>
+          <button style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;" title="LinkedIn">💼</button>
+          <button style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;" title="GitHub">🐙</button>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">Platform</h4>
+        <a href="report.html"    class="footer-link">📋 Report Issue</a>
+        <a href="map.html"       class="footer-link">🗺️ Live Map</a>
+        <a href="dashboard.html" class="footer-link">📊 Dashboard</a>
+        <a href="community.html" class="footer-link">🗳️ Community</a>
+        <a href="tracker.html"   class="footer-link">📡 Tracker</a>
+        <a href="profile.html"   class="footer-link">👤 Profile</a>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">Features</h4>
+        <span class="footer-link">🧠 Smart Filtering</span>
+        <span class="footer-link">🤖 AI Validation</span>
+        <span class="footer-link">⭐ Reputation System</span>
+        <span class="footer-link">🏛️ Dept. Routing</span>
+        <span class="footer-link">⏱️ SLA Tracking</span>
+        <span class="footer-link">🔒 Anonymity Control</span>
+      </div>
+
+      <div>
+        <h4 style="font-size:0.88rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">Team – SVIET PTU</h4>
+        <span class="footer-link">👨‍💻 Jitendra Ruhela</span>
+        <span class="footer-link">👨‍💻 Team Member 2</span>
+        <span class="footer-link">👨‍💻 Team Member 3</span>
+        <span class="footer-link">👨‍💻 Team Member 4</span>
+        <span class="footer-link" style="color:var(--accent);font-weight:600;margin-top:4px;">🏆 Hackathon 2026</span>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p style="font-size:0.85rem;color:var(--text-muted);">© 2026 CivicEye – SVIET PTU. Built with ❤️ for a better India.</p>
+      <p style="font-size:0.85rem;color:var(--accent);font-weight:600;">🛡️ Powered by Firebase · OpenStreetMap · Chart.js</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

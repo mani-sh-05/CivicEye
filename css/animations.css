@@ -1,0 +1,323 @@
+/* ===========================
+   CivicEye – Animations v2
+   =========================== */
+
+/* ===========================
+   Keyframes
+   =========================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInFromTop {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.65; transform: scale(1.12); }
+}
+
+@keyframes mapPulse {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: 0.6; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(0.5deg); }
+  66%       { transform: translateY(-4px) rotate(-0.5deg); }
+}
+
+@keyframes blobMorph {
+  0%,100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  25%      { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+  50%      { border-radius: 50% 30% 60% 50% / 40% 70% 30% 60%; }
+  75%      { border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
+}
+
+@keyframes rippleAnim {
+  0%   { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(60%) scale(0.9); }
+}
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(79,70,229,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(79,70,229,0.55); }
+}
+
+@keyframes accentGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(20,184,166,0.3); }
+  50%       { box-shadow: 0 0 40px rgba(20,184,166,0.55); }
+}
+
+@keyframes counterUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes typewriter {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(79,70,229,0.2); }
+  50%       { border-color: rgba(79,70,229,0.6); }
+}
+
+/* ===========================
+   Utility Animation Classes
+   =========================== */
+.animate-fade-in    { animation: fadeIn    0.5s ease forwards; }
+.animate-fade-up    { animation: fadeInUp  0.6s cubic-bezier(0.34,1.2,0.64,1) forwards; }
+.animate-fade-down  { animation: fadeInDown 0.5s ease forwards; }
+.animate-scale-in   { animation: scaleIn   0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.animate-float      { animation: float     3s ease-in-out infinite; }
+.float-slow         { animation: floatSlow 4.5s ease-in-out infinite; }
+.animate-spin       { animation: spin      1s linear infinite; }
+.animate-pulse      { animation: pulse     2s ease-in-out infinite; }
+.animate-glow       { animation: glow      2.5s ease-in-out infinite; }
+.animate-gradient   {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+}
+
+/* ===========================
+   Hero Section Animations
+   =========================== */
+.hero-animate {
+  opacity: 0;
+  animation: fadeInUp 0.7s cubic-bezier(0.34,1.2,0.64,1) forwards;
+}
+.hero-animate-1 { animation-delay: 0.10s; }
+.hero-animate-2 { animation-delay: 0.22s; }
+.hero-animate-3 { animation-delay: 0.36s; }
+.hero-animate-4 { animation-delay: 0.50s; }
+.hero-animate-5 { animation-delay: 0.65s; }
+
+/* ===========================
+   Scroll Reveal
+   =========================== */
+.reveal, .reveal-left, .reveal-right {
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+              transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.reveal       { transform: translateY(30px); }
+.reveal-left  { transform: translateX(-30px); }
+.reveal-right { transform: translateX(30px); }
+
+.reveal.revealed,
+.reveal-left.revealed,
+.reveal-right.revealed {
+  opacity: 1;
+  transform: translate(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.08s; }
+.reveal-delay-2 { transition-delay: 0.18s; }
+.reveal-delay-3 { transition-delay: 0.28s; }
+.reveal-delay-4 { transition-delay: 0.38s; }
+
+/* ===========================
+   Page Enter Animation
+   =========================== */
+.page-enter {
+  animation: fadeInUp 0.5s cubic-bezier(0.34,1.2,0.64,1) forwards;
+}
+
+/* ===========================
+   Ripple Effect
+   =========================== */
+.btn-ripple { overflow: hidden; }
+.ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  pointer-events: none;
+  animation: rippleAnim 0.6s linear forwards;
+}
+
+/* ===========================
+   Loading Skeleton
+   =========================== */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(148,163,184,0.08) 25%,
+    rgba(148,163,184,0.18) 50%,
+    rgba(148,163,184,0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: var(--radius-md);
+}
+.skeleton-text   { height: 14px; width: 100%; margin-bottom: 8px; }
+.skeleton-title  { height: 24px; width: 60%; margin-bottom: 12px; }
+.skeleton-card   { height: 160px; width: 100%; }
+.skeleton-avatar { width: 52px; height: 52px; border-radius: 50%; }
+
+/* ===========================
+   Feature Icon Hover
+   =========================== */
+.feature-icon {
+  font-size: 1.5rem;
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.card:hover .feature-icon { transform: scale(1.2) rotate(-5deg); }
+
+/* ===========================
+   Stat Counter
+   =========================== */
+[data-count] {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+/* ===========================
+   Gradient Text Animation
+   =========================== */
+.gradient-text-animated {
+  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 5s ease infinite;
+}
+
+/* ===========================
+   Dark Toggle Transition
+   =========================== */
+.dark-toggle {
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.dark-toggle:active { transform: rotate(20deg) scale(0.9); }
+
+/* ===========================
+   Map pulse for user location
+   =========================== */
+@keyframes mapPulseRing {
+  0%   { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.map-pulse-ring {
+  animation: mapPulseRing 1.8s ease-out infinite;
+}
+
+/* ===========================
+   Hover Lift
+   =========================== */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1),
+              box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ===========================
+   Validation Box Animations
+   =========================== */
+.validation-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  animation: scaleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.validation-indicator.valid {
+  background: rgba(34,197,94,0.08);
+  border: 1.5px solid rgba(34,197,94,0.25);
+}
+.validation-indicator.suspicious {
+  background: rgba(239,68,68,0.08);
+  border: 1.5px solid rgba(239,68,68,0.25);
+}
+.validation-icon { font-size: 1.5rem; flex-shrink: 0; }
+.validation-title { font-weight: 700; font-size: 0.9rem; }
+.validation-desc  { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ===========================
+   Glowing Cards on hover
+   =========================== */
+.glow-on-hover {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.glow-on-hover:hover {
+  box-shadow: var(--shadow-glow), var(--shadow-lg);
+}
+
+/* ===========================
+   Reduce Motion Preference
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

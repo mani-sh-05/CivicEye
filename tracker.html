@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transparency Tracker – CivicEye</title>
+  <meta name="description" content="Track complaint lifecycle with full timeline, SLA monitoring, delay detection and department routing." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📡</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=wrap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/navbar.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    .tracker-layout { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; }
+
+    /* Complaint list */
+    .tracker-list-item {
+      padding: 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      background: rgba(255,255,255,0.50);
+    }
+    [data-theme="dark"] .tracker-list-item { background: rgba(15,23,42,0.45); }
+    .tracker-list-item:hover  { border-color: var(--secondary); background: rgba(79,70,229,0.05); }
+    .tracker-list-item.active { border-color: var(--secondary); background: rgba(79,70,229,0.08); box-shadow: 0 4px 14px rgba(79,70,229,0.12); }
+
+    /* SLA bars */
+    .sla-bar  { width:100%; height:10px; background:rgba(148,163,184,0.15); border-radius:var(--radius-full); overflow:hidden; margin:8px 0; }
+    .sla-fill { height:100%; border-radius:var(--radius-full); transition:width 1.5s cubic-bezier(0.4,0,0.2,1); }
+
+    /* Detail panel */
+    .detail-card {
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow-xl);
+    }
+
+    /* Dept info */
+    .dept-info {
+      display: flex; align-items: center; gap: 14px;
+      background: rgba(79,70,229,0.05);
+      border: 1px solid rgba(79,70,229,0.12);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 22px 0;
+    }
+
+    @media (max-width: 860px) { .tracker-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="nav-logo"><div class="nav-logo-icon">👁️</div><span class="nav-logo-text">CivicEye</span><span class="nav-logo-tag">BETA</span></a>
+    <div class="nav-links">
+      <a href="index.html"     class="nav-link">🏠 Home</a>
+      <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+      <a href="report.html"    class="nav-link">📋 Report</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="community.html" class="nav-link">🗳️ Community</a>
+      <a href="tracker.html"   class="nav-link active">📡 Tracker</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle">🌙</button>
+      <a href="profile.html" class="nav-avatar">R</a>
+      <a href="report.html" class="btn btn-primary btn-sm btn-ripple">+ Report</a>
+      <button class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <a href="index.html"     class="nav-link">🏠 Home</a>
+  <a href="map.html"       class="nav-link">🗺️ Live Map</a>
+  <a href="report.html"    class="nav-link">📋 Report Issue</a>
+  <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  <a href="community.html" class="nav-link">🗳️ Community</a>
+  <a href="tracker.html"   class="nav-link">📡 Tracker</a>
+  <a href="profile.html"   class="nav-link">👤 Profile</a>
+</div>
+<div id="toast-container"></div>
+
+<div class="page-wrapper">
+  <div class="container" style="padding-top:32px;padding-bottom:60px;">
+
+    <!-- Header -->
+    <div style="margin-bottom:28px;">
+      <div class="section-tag" style="margin-bottom:10px;">📡 Transparency</div>
+      <h1 style="font-size:clamp(1.8rem,4vw,2.4rem);font-weight:900;margin-bottom:6px;letter-spacing:-0.03em;">Complaint Tracker</h1>
+      <p style="color:var(--text-muted);">Full lifecycle tracking · Real-time SLA monitoring · Automatic delay detection &amp; escalation</p>
+    </div>
+
+    <!-- Search + Filter -->
+    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+      <div class="search-bar" style="flex:1;max-width:360px;">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="trackerSearch" placeholder="Search by ID or title..." />
+      </div>
+      <select class="form-select" style="width:auto;padding:10px 36px 10px 14px;font-size:0.875rem;" id="statusFilter">
+        <option value="all">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="resolved">Resolved</option>
+        <option value="delayed">Delayed</option>
+        <option value="processing">Processing</option>
+      </select>
+    </div>
+
+    <div class="tracker-layout">
+
+      <!-- Left: Complaint List -->
+      <div>
+        <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">
+          Complaints (<span id="trackerCount">6</span>)
+        </div>
+        <div id="trackerList"></div>
+      </div>
+
+      <!-- Right: Detail Panel -->
+      <div id="detailPanel">
+        <div class="detail-card">
+          <div class="empty-state">
+            <div class="empty-state-icon">👈</div>
+            <div class="empty-state-title">Select a Complaint</div>
+            <div class="empty-state-desc">Choose a complaint from the list to view its full timeline and SLA status.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  const timelines = {
+    C001: [
+      { status:'completed', date:'Apr 1, 09:12', title:'Complaint Submitted', desc:'Your complaint CE-C001 was submitted successfully with GPS + description.', actor:'You' },
+      { status:'completed', date:'Apr 1, 09:15', title:'AI Validation Passed', desc:'Complaint verified — image, GPS location & description all provided. 92% confidence.', actor:'AI System' },
+      { status:'active',    date:'Apr 1, 10:00', title:'Assigned to Roads Dept.', desc:'Routed to Roads & Transport Department. Expected response within 3 working days.', actor:'Auto-Router' },
+      { status:'pending',   date:'—',            title:'Inspection Scheduled', desc:'Field officer to inspect the site and assess severity.', actor:'Roads Dept.' },
+      { status:'pending',   date:'—',            title:'Resolution', desc:'Issue to be fixed and marked resolved.', actor:'Roads Dept.' }
+    ],
+    C002: [
+      { status:'completed', date:'Mar 28, 14:30', title:'Complaint Submitted', desc:'Garbage overflow complaint submitted with photo evidence.', actor:'Priya Sharma' },
+      { status:'completed', date:'Mar 28, 14:32', title:'AI Validation Passed', desc:'Verified with image evidence. 96% confidence score.', actor:'AI System' },
+      { status:'completed', date:'Mar 28, 15:00', title:'Assigned to Sanitation', desc:'Routed to Municipal Sanitation Department with high priority.', actor:'Auto-Router' },
+      { status:'completed', date:'Mar 29, 10:00', title:'Field Inspection Done', desc:'Officer inspected and confirmed garbage overflow. Marked urgent.', actor:'Sanitation Dept.' },
+      { status:'completed', date:'Mar 30, 08:00', title:'✅ Resolved', desc:'Garbage cleared. All bins replaced with larger capacity bins. Issue closed.', actor:'Sanitation Dept.' }
+    ],
+    C003: [
+      { status:'completed', date:'Mar 20, 11:00', title:'Complaint Submitted', desc:'Water pipeline leak reported with GPS coordinates.', actor:'Amit Singh' },
+      { status:'completed', date:'Mar 20, 11:02', title:'AI Validation – Suspicious', desc:'No image provided. Flagged for manual review. 45% confidence score.', actor:'AI System' },
+      { status:'completed', date:'Mar 20, 14:00', title:'Assigned to Water Dept.', desc:'Escalated despite flag due to GPS location data being precise.', actor:'Auto-Router' },
+      { status:'delayed',   date:'Mar 25',         title:'⚠ SLA BREACH DETECTED', desc:'No response received within 5-day SLA window. Auto-escalated to senior officer.', actor:'SLA Monitor' },
+      { status:'pending',   date:'—',              title:'Awaiting Resolution', desc:'Senior officer notified. Action expected imminently.', actor:'Water Dept.' }
+    ]
+  };
+
+  let selectedId = null;
+  const slaData  = { C001:45, C002:100, C003:28, C004:60, C005:100, C006:30 };
+  const deptData = { Road:'🛣️ Roads & Transport', Garbage:'🗑️ Sanitation Dept.', Water:'💧 Water Supply Dept.', Electricity:'⚡ Electricity Board', Drainage:'🚰 Drainage & Sewage', Other:'📌 General Affairs' };
+
+  function statusIcon(s)  { return { pending:'⏳', resolved:'✅', delayed:'🚨', processing:'🔵' }[s] || '⚪'; }
+  function statusColor(s) { return { pending:'#B45309', resolved:'#15803D', delayed:'#B91C1C', processing:'#1D4ED8' }[s] || '#6B7280'; }
+  function slaColor(pct)  { return pct >= 80 ? '#22C55E' : pct >= 50 ? '#F59E0B' : '#EF4444'; }
+
+  function renderList(data) {
+    const filterVal = document.getElementById('statusFilter').value;
+    const searchVal = document.getElementById('trackerSearch').value.toLowerCase();
+    const filtered  = data.filter(c => {
+      if (filterVal !== 'all' && c.status !== filterVal) return false;
+      if (searchVal && !c.id.toLowerCase().includes(searchVal) && !c.title.toLowerCase().includes(searchVal)) return false;
+      return true;
+    });
+    document.getElementById('trackerCount').textContent = filtered.length;
+    document.getElementById('trackerList').innerHTML = filtered.map(c => {
+      const pct = slaData[c.id] || 50;
+      return `
+        <div class="tracker-list-item ${selectedId===c.id?'active':''}" onclick="showDetail('${c.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+            <span style="font-weight:700;font-size:0.8rem;color:var(--secondary);">${c.id}</span>
+            <span style="font-size:0.72rem;font-weight:700;color:${statusColor(c.status)};">${statusIcon(c.status)} ${c.status.toUpperCase()}</span>
+          </div>
+          <div style="font-weight:600;font-size:0.9rem;margin-bottom:4px;">${c.title}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:9px;">📅 ${c.date} · 👍 ${c.votes}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;">SLA Progress</div>
+          <div class="sla-bar">
+            <div class="sla-fill" style="width:${pct}%;background:${slaColor(pct)};"></div>
+          </div>
+          <div style="font-size:0.72rem;font-weight:700;color:${slaColor(pct)};">
+            ${pct}% ${pct===100?'(Resolved within SLA ✓)':pct<50?'(⚠ SLA Breach Risk)':'(On Track)'}
+          </div>
+        </div>`;
+    }).join('') || '<div class="empty-state" style="padding:32px;"><div style="font-size:2rem;opacity:0.3;">🔍</div><div style="font-size:0.9rem;color:var(--text-muted);margin-top:8px;">No complaints found</div></div>';
+  }
+
+  function showDetail(id) {
+    selectedId = id;
+    const comp = SampleComplaints.find(c => c.id === id) || { id, title:'Complaint', category:'Other', description:'Details below.', status:'pending', votes:0, date:'2026-04-01', verified:true, userName:'User' };
+    const tl   = timelines[id] || timelines.C001;
+    const pct  = slaData[id] || 50;
+
+    document.getElementById('detailPanel').innerHTML = `
+      <div class="detail-card page-enter">
+
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:22px;">
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">${comp.id} · ${comp.category}</div>
+            <h2 style="font-size:1.35rem;font-weight:900;margin-bottom:10px;letter-spacing:-0.02em;">${comp.title}</h2>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="badge badge-${comp.status}">${statusIcon(comp.status)} ${comp.status.charAt(0).toUpperCase()+comp.status.slice(1)}</span>
+              ${comp.verified ? '<span class="badge badge-verified">✓ AI Verified</span>' : '<span class="badge badge-suspicious">⚠ Suspicious</span>'}
+            </div>
+          </div>
+          <div style="text-align:right;font-size:0.82rem;color:var(--text-muted);flex-shrink:0;">
+            <div>👤 ${comp.userName||'Anonymous'}</div>
+            <div>📅 Filed: ${comp.date}</div>
+            <div>👍 ${comp.votes} community votes</div>
+          </div>
+        </div>
+
+        <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:22px;line-height:1.65;">${comp.description}</p>
+
+        <!-- SLA Status -->
+        <div style="background:${pct<50?'rgba(239,68,68,0.05)':'rgba(34,197,94,0.05)'};border:1.5px solid ${pct<50?'rgba(239,68,68,0.20)':'rgba(34,197,94,0.20)'};border-radius:var(--radius-md);padding:18px;margin-bottom:22px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-weight:700;font-size:0.95rem;">${pct<50?'⚠️ SLA Risk – Action Required':'📋 SLA Status'}</span>
+            <span style="font-weight:900;font-size:1.2rem;color:${slaColor(pct)};font-family:'Poppins',sans-serif;">${pct}%</span>
+          </div>
+          <div class="sla-bar" style="height:12px;">
+            <div class="sla-fill" style="width:${pct}%;background:linear-gradient(90deg,${slaColor(pct)},${slaColor(pct)}aa);"></div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-top:10px;line-height:1.55;">
+            ${pct>=80
+              ? '✅ Resolved within SLA window. Department performed on time and efficiently.'
+              : pct>=50
+              ? '⏳ In progress. Department has time remaining within SLA window.'
+              : '⚠️ SLA breached. Complaint auto-escalated to senior officer. Accountability team notified.'
+            }
+          </div>
+        </div>
+
+        <!-- Assigned Department -->
+        <div class="dept-info">
+          <div style="font-size:1.8rem;">${(deptData[comp.category]||'🏛️').slice(0,2)}</div>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.9rem;">Handling Department</div>
+            <div style="font-size:0.85rem;color:var(--text-muted);">${deptData[comp.category]||'General Affairs'}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:0.8rem;color:var(--text-muted);">Expected SLA</div>
+            <div style="font-weight:700;color:var(--primary);">5 Working Days</div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div style="font-weight:800;font-size:1.05rem;margin-bottom:18px;">📍 Complaint Timeline</div>
+        <div class="timeline">
+          ${tl.map(t => `
+            <div class="timeline-item">
+              <div class="timeline-dot ${t.status}"></div>
+              <div class="timeline-date">${t.date} · <span style="font-weight:600;">${t.actor}</span></div>
+              <div class="timeline-title">${t.title}</div>
+              <div class="timeline-desc">${t.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:12px;margin-top:26px;padding-top:22px;border-top:1px solid var(--border);flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="Toast.info('Reminder Sent', 'Authority has been notified to take action on your complaint.')">📢 Send Reminder</button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,0.08);color:#B91C1C;border:1px solid rgba(239,68,68,0.20);" onclick="Toast.warning('Escalated!', 'Complaint escalated to senior officer. Response expected within 24 hours.')">🚨 Escalate</button>
+          <button class="btn btn-outline btn-sm" onclick="Toast.info('Shared!', 'Link copied to clipboard.')">📤 Share</button>
+          <a href="map.html" class="btn btn-ghost btn-sm" style="margin-left:auto;">🗺️ View on Map</a>
+        </div>
+      </div>`;
+
+    // Re-render list to update active state
+    renderList(SampleComplaints);
+  }
+
+  document.getElementById('statusFilter').addEventListener('change', () => renderList(SampleComplaints));
+  document.getElementById('trackerSearch').addEventListener('input',  () => renderList(SampleComplaints));
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderList(SampleComplaints);
+    if (SampleComplaints.length) showDetail(SampleComplaints[0].id);
+  });
+</script>
+</body>
+</html>

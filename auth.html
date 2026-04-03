@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In – CivicEye</title>
+  <meta name="description" content="Sign in or create a free account to report civic issues, track complaints and engage with your community." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #EEF2FF 0%, #F0FDF4 50%, #FFF7ED 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Animated background blobs */
+    .bg-blob { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: float 8s ease-in-out infinite; }
+    .bg-blob-1 { width: 500px; height: 500px; background: rgba(79,70,229,0.12); top: -15%; left: -10%; animation-delay: 0s; }
+    .bg-blob-2 { width: 400px; height: 400px; background: rgba(20,184,166,0.10); bottom: -10%; right: -5%; animation-delay: -4s; }
+    .bg-blob-3 { width: 300px; height: 300px; background: rgba(30,58,138,0.08); top: 40%; left: 60%; animation-delay: -2s; }
+    @keyframes float { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-30px) scale(1.05); } }
+
+    [data-theme="dark"] body {
+      background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #0F172A 100%);
+    }
+
+    /* ─── Wrapper ─── */
+    .auth-wrapper {
+      width: 100%;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 28px;
+      box-shadow: 0 32px 80px rgba(30,58,138,0.15), 0 0 0 1px rgba(255,255,255,0.5);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+    [data-theme="dark"] .auth-wrapper {
+      background: rgba(15,23,42,0.85);
+      border-color: rgba(255,255,255,0.08);
+    }
+
+    /* ─── Left Branding Panel ─── */
+    .auth-brand {
+      background: linear-gradient(145deg, #1E3A8A 0%, #4F46E5 60%, #14B8A6 100%);
+      padding: 56px 44px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-brand::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='1.2' fill='rgba(255,255,255,0.07)'/%3E%3C/svg%3E");
+    }
+    .brand-blob { position: absolute; border-radius: 50%; filter: blur(50px); }
+    .brand-blob-1 { width: 250px; height: 250px; background: rgba(255,255,255,0.15); top: -60px; left: -60px; }
+    .brand-blob-2 { width: 300px; height: 300px; background: rgba(20,184,166,0.25); bottom: -80px; right: -80px; }
+
+    .brand-inner { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; }
+
+    .brand-logo { display: flex; align-items: center; gap: 12px; margin-bottom: auto; }
+    .brand-logo-icon { width: 46px; height: 46px; background: rgba(255,255,255,0.18); border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; backdrop-filter: blur(10px); }
+    .brand-logo-text { font-family: 'Poppins', sans-serif; font-size: 1.7rem; font-weight: 800; color: white; letter-spacing: -0.03em; }
+    .brand-logo-tag { font-size: 0.62rem; font-weight: 800; background: rgba(255,255,255,0.2); color: white; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.07em; }
+
+    .brand-headline { font-family: 'Poppins', sans-serif; font-size: clamp(1.7rem, 2.5vw, 2.4rem); font-weight: 900; color: white; line-height: 1.15; margin: 48px 0 24px; letter-spacing: -0.03em; }
+    .brand-headline span { color: rgba(167,243,208,1); }
+
+    .brand-features { display: flex; flex-direction: column; gap: 13px; margin-bottom: 44px; }
+    .brand-feature { display: flex; align-items: center; gap: 10px; color: rgba(255,255,255,0.92); font-size: 0.95rem; font-weight: 500; }
+    .brand-feat-dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; flex-shrink: 0; }
+
+    .brand-social-proof { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+    .social-avatars { display: flex; }
+    .social-avatars img { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); margin-right: -8px; object-fit: cover; }
+    .social-text { font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.88); }
+
+    /* ─── Right Auth Panel ─── */
+    .auth-forms {
+      padding: 52px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .auth-header { margin-bottom: 28px; }
+    .auth-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .auth-title { font-family: 'Poppins', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--text-primary, #111827); letter-spacing: -0.03em; }
+    .auth-subtitle { font-size: 0.9rem; color: #6B7280; margin-top: 4px; }
+
+    /* Tab switch */
+    .auth-tabs { display: flex; background: #F3F4F6; border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+    [data-theme="dark"] .auth-tabs { background: rgba(255,255,255,0.06); }
+    .auth-tab { flex: 1; text-align: center; padding: 10px; border-radius: 9px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.25s ease; color: #6B7280; }
+    .auth-tab.active { background: white; color: #1E3A8A; box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+    [data-theme="dark"] .auth-tab.active { background: rgba(79,70,229,0.2); color: #818CF8; }
+
+    /* Google Button */
+    .google-btn {
+      width: 100%;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: white; color: #374151;
+      border: 1.5px solid #E5E7EB; border-radius: 12px;
+      padding: 13px 20px; font-weight: 700; font-size: 0.95rem; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: all 0.2s;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    [data-theme="dark"] .google-btn { background: rgba(255,255,255,0.06); color: #E2E8F0; border-color: rgba(255,255,255,0.1); }
+    .google-btn:hover { border-color: #4F46E5; background: #F5F3FF; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.15); }
+
+    /* Divider */
+    .or-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+    .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: #E5E7EB; }
+    [data-theme="dark"] .or-divider::before, [data-theme="dark"] .or-divider::after { background: rgba(255,255,255,0.1); }
+    .or-divider span { font-size: 0.78rem; font-weight: 600; color: #9CA3AF; white-space: nowrap; }
+
+    /* Forms */
+    .form-pane { display: none; }
+    .form-pane.active { display: block; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .field-group { margin-bottom: 16px; }
+    .field-label { display: block; font-size: 0.82rem; font-weight: 700; color: #374151; margin-bottom: 6px; letter-spacing: 0.01em; }
+    [data-theme="dark"] .field-label { color: #CBD5E1; }
+    .field-label-row { display: flex; justify-content: space-between; align-items: center; }
+    .forgot-link { font-size: 0.8rem; color: #4F46E5; text-decoration: none; font-weight: 600; }
+    .forgot-link:hover { text-decoration: underline; }
+
+    .field-wrap { position: relative; }
+    .field-input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid #E5E7EB; border-radius: 11px;
+      font-family: 'Inter', sans-serif; font-size: 0.95rem;
+      color: #111827; background: #FAFAFA;
+      outline: none; transition: all 0.2s;
+    }
+    [data-theme="dark"] .field-input { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #E2E8F0; }
+    .field-input::placeholder { color: #9CA3AF; }
+    .field-input:focus { border-color: #4F46E5; background: white; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+    [data-theme="dark"] .field-input:focus { background: rgba(79,70,229,0.08); }
+    .field-input.error { border-color: #EF4444; box-shadow: 0 0 0 4px rgba(239,68,68,0.1); }
+    .field-input.success { border-color: #22C55E; }
+
+    .eye-toggle {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 1rem; color: #6B7280; padding: 4px;
+    }
+    .eye-toggle:hover { color: #4F46E5; }
+
+    .field-error { font-size: 0.75rem; color: #EF4444; font-weight: 500; margin-top: 5px; display: none; }
+    .field-error.show { display: block; }
+
+    /* Password strength bar */
+    .strength-bar { height: 4px; border-radius: 4px; background: #E5E7EB; margin-top: 8px; overflow: hidden; display: none; }
+    .strength-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s ease; width: 0; }
+    .strength-label { font-size: 0.72rem; color: #6B7280; margin-top: 4px; display: none; }
+
+    /* Checkbox row */
+    .check-row { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 20px; }
+    .check-row input[type="checkbox"] { accent-color: #4F46E5; width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; cursor: pointer; }
+    .check-row label { font-size: 0.82rem; color: #6B7280; cursor: pointer; line-height: 1.55; }
+    .check-row a { color: #4F46E5; text-decoration: none; font-weight: 600; }
+    .check-row a:hover { text-decoration: underline; }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #1E3A8A, #4F46E5);
+      color: white; border: none; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: all 0.25s;
+      box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+      position: relative; overflow: hidden;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(79,70,229,0.45); }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+    .submit-btn .btn-text { transition: opacity 0.2s; }
+    .submit-btn .btn-loader { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; }
+    .submit-btn.loading .btn-text { opacity: 0; }
+    .submit-btn.loading .btn-loader { display: flex; }
+
+    /* Spinner */
+    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .auth-switch { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #6B7280; }
+    .auth-switch a { color: #4F46E5; font-weight: 700; text-decoration: none; }
+    .auth-switch a:hover { text-decoration: underline; }
+
+    /* Dark mode toggle */
+    .dark-btn { background: transparent; border: 1px solid #E5E7EB; padding: 7px 11px; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+    [data-theme="dark"] .dark-btn { border-color: rgba(255,255,255,0.15); }
+
+    /* Success checkmark */
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .success-screen { display: none; text-align: center; padding: 20px 0; }
+    .success-check { font-size: 3rem; animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards; display: block; margin-bottom: 14px; }
+
+    @media (max-width: 820px) {
+      .auth-wrapper { grid-template-columns: 1fr; max-width: 480px; }
+      .auth-brand { display: none; }
+      .auth-forms { padding: 40px 28px; }
+    }
+    @media (max-width: 480px) { .auth-forms { padding: 32px 20px; } }
+  </style>
+</head>
+<body>
+
+<!-- Background blobs -->
+<div class="bg-blob bg-blob-1"></div>
+<div class="bg-blob bg-blob-2"></div>
+<div class="bg-blob bg-blob-3"></div>
+
+<div id="toast-container"></div>
+
+<div class="auth-wrapper">
+
+  <!-- ─── LEFT BRAND ─── -->
+  <div class="auth-brand">
+    <div class="brand-blob brand-blob-1"></div>
+    <div class="brand-blob brand-blob-2"></div>
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <div class="brand-logo-icon">👁️</div>
+        <div>
+          <div class="brand-logo-text">CivicEye</div>
+        </div>
+        <span class="brand-logo-tag">BETA</span>
+      </div>
+
+      <h2 class="brand-headline">Make your city <span>better</span>, together.</h2>
+
+      <div class="brand-features">
+        <div class="brand-feature">
+          <div class="brand-feat-dot">📋</div>
+          Report civic issues in under 60 seconds
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feat-dot">🧠</div>
+          AI validates & routes to correct department
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feat-dot">📡</div>
+          Track complaints live — full transparency
+        </div>
+        <div class="brand-feature">
+          <div class="brand-feat-dot">🏆</div>
+          Earn reputation & hold authorities accountable
+        </div>
+      </div>
+
+      <div class="brand-social-proof">
+        <div class="social-avatars">
+          <img src="https://i.pravatar.cc/100?img=1" alt="User" />
+          <img src="https://i.pravatar.cc/100?img=3" alt="User" />
+          <img src="https://i.pravatar.cc/100?img=5" alt="User" />
+          <img src="https://i.pravatar.cc/100?img=7" alt="User" />
+        </div>
+        <div class="social-text">12,400+ citizens already joined</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── RIGHT FORMS ─── -->
+  <div class="auth-forms">
+    <div class="auth-header">
+      <div class="auth-header-top">
+        <div></div>
+        <button class="dark-btn" id="darkToggleAuth" title="Toggle dark mode">🌙</button>
+      </div>
+      <h1 class="auth-title" id="authTitle">Welcome back 👋</h1>
+      <p class="auth-subtitle" id="authSubtitle">Sign in to your CivicEye account to continue.</p>
+    </div>
+
+    <!-- Tab Switch -->
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</div>
+      <div class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create Account</div>
+    </div>
+
+    <!-- Google Continue -->
+    <button class="google-btn" id="googleBtn" onclick="handleGoogle()">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="or-divider"><span>OR CONTINUE WITH EMAIL</span></div>
+
+    <!-- ─── LOGIN FORM ─── -->
+    <form class="form-pane active" id="loginForm" novalidate>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input type="email" class="field-input" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
+        <div class="field-error" id="loginEmailErr">Please enter a valid email address.</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label-row">
+          <label class="field-label">Password</label>
+          <a href="#" class="forgot-link" onclick="forgotPassword(event)">Forgot password?</a>
+        </div>
+        <div class="field-wrap">
+          <input type="password" class="field-input" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" />
+          <button type="button" class="eye-toggle" onclick="togglePwd('loginPassword',this)">👁</button>
+        </div>
+        <div class="field-error" id="loginPasswordErr">Password is incorrect.</div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="rememberMe" checked />
+        <label for="rememberMe">Keep me signed in for 30 days</label>
+      </div>
+      <button type="submit" class="submit-btn" id="loginBtn">
+        <span class="btn-text">Sign In →</span>
+        <span class="btn-loader"><div class="spinner"></div></span>
+      </button>
+    </form>
+
+    <!-- ─── SIGNUP FORM ─── -->
+    <form class="form-pane" id="signupForm" novalidate>
+      <div class="field-group">
+        <label class="field-label">Full Name</label>
+        <input type="text" class="field-input" id="signupName" placeholder="e.g. Rajesh Kumar" autocomplete="name" />
+        <div class="field-error" id="signupNameErr">Please enter your full name.</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <input type="email" class="field-input" id="signupEmail" placeholder="you@example.com" autocomplete="email" />
+        <div class="field-error" id="signupEmailErr">Please enter a valid email address.</div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">City / Location</label>
+        <input type="text" class="field-input" id="signupCity" placeholder="e.g. Chandigarh" autocomplete="address-level2" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Create Password</label>
+        <div class="field-wrap">
+          <input type="password" class="field-input" id="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)" />
+          <button type="button" class="eye-toggle" onclick="togglePwd('signupPassword',this)">👁</button>
+        </div>
+        <div class="strength-bar" id="strengthBar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-label" id="strengthLabel"></div>
+        <div class="field-error" id="signupPasswordErr">Password must be at least 8 characters.</div>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="terms" />
+        <label for="terms">I agree to CivicEye's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. My data is used only to improve civic services.</label>
+      </div>
+      <button type="submit" class="submit-btn" id="signupBtn">
+        <span class="btn-text">Create Free Account →</span>
+        <span class="btn-loader"><div class="spinner"></div></span>
+      </button>
+    </form>
+
+    <!-- ─── SUCCESS SCREEN ─── -->
+    <div class="success-screen" id="successScreen">
+      <span class="success-check">✅</span>
+      <h2 style="font-size:1.3rem;font-weight:800;color:#111827;margin-bottom:8px;" id="successTitle">You're in!</h2>
+      <p style="color:#6B7280;font-size:0.9rem;" id="successMsg">Redirecting you now...</p>
+    </div>
+
+    <div class="auth-switch" id="switchText">
+      Don't have an account? <a href="#" onclick="switchTab('signup');return false;">Sign up free</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  // ══════════════════════════════════════════
+  //  CivicEye Auth — Full credential system
+  // ══════════════════════════════════════════
+
+  // Storage helpers
+  function getUsers()  { try { return JSON.parse(localStorage.getItem('civiceye_users') || '[]'); } catch(e) { return []; } }
+  function saveUsers(u){ localStorage.setItem('civiceye_users', JSON.stringify(u)); }
+
+  function createSession(user) {
+    const session = {
+      uid:       user.uid,
+      name:      user.name,
+      email:     user.email,
+      city:      user.city || '',
+      avatar:    user.name.charAt(0).toUpperCase(),
+      badge:     user.badge || 'beginner',
+      trustScore:user.trustScore || 30,
+      joinDate:  user.joinDate,
+      loginTime: Date.now()
+    };
+    localStorage.setItem('civiceye_user_session', 'true');
+    localStorage.setItem('civiceye_current_user', JSON.stringify(session));
+  }
+
+  // ── Tab Switch ──
+  let activeTab = 'login';
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('loginForm').classList.toggle('active', tab === 'login');
+    document.getElementById('signupForm').classList.toggle('active', tab === 'signup');
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+    document.getElementById('switchText').innerHTML = tab === 'login'
+      ? 'Don\'t have an account? <a href="#" onclick="switchTab(\'signup\');return false;">Sign up free</a>'
+      : 'Already have an account? <a href="#" onclick="switchTab(\'login\');return false;">Sign in</a>';
+    document.getElementById('authTitle').textContent = tab === 'login' ? 'Welcome back 👋' : 'Create your account';
+    document.getElementById('authSubtitle').textContent = tab === 'login'
+      ? 'Sign in to your CivicEye account to continue.'
+      : 'Join thousands of citizens making their cities better.';
+
+    clearErrors();
+  }
+
+  // ── Password eye toggle ──
+  function togglePwd(id, btn) {
+    const el = document.getElementById(id);
+    const isHidden = el.type === 'password';
+    el.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+  }
+
+  // ── Password strength ──
+  function checkStrength(val) {
+    const bar = document.getElementById('strengthBar');
+    const fill = document.getElementById('strengthFill');
+    const label = document.getElementById('strengthLabel');
+    bar.style.display = val.length > 0 ? 'block' : 'none';
+    label.style.display = val.length > 0 ? 'block' : 'none';
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const cfg = [
+      { w: '25%', bg: '#EF4444', lbl: '⚠ Very Weak' },
+      { w: '50%', bg: '#F59E0B', lbl: '△ Weak' },
+      { w: '75%', bg: '#3B82F6', lbl: '✓ Good' },
+      { w: '100%',bg: '#22C55E', lbl: '★ Strong!' }
+    ][score - 1] || { w: '0%', bg: '#E5E7EB', lbl: '' };
+    fill.style.width = cfg.w;
+    fill.style.background = cfg.bg;
+    label.textContent = cfg.lbl;
+    label.style.color = cfg.bg;
+  }
+
+  // ── Validation helpers ──
+  function showErr(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = msg || el.textContent; el.classList.add('show'); }
+    const inputId = id.replace('Err','');
+    const inp = document.getElementById(inputId);
+    if (inp) inp.classList.add('error');
+  }
+  function clearErr(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+    const inp = document.getElementById(id.replace('Err',''));
+    if (inp) { inp.classList.remove('error'); inp.classList.remove('success'); }
+  }
+  function clearErrors() {
+    ['loginEmailErr','loginPasswordErr','signupNameErr','signupEmailErr','signupPasswordErr'].forEach(clearErr);
+  }
+
+  function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+  // ── Redirect after success ──
+  function doRedirect(delay = 1400) {
+    setTimeout(() => {
+      const dest = localStorage.getItem('civiceye_redirect') || 'index.html';
+      localStorage.removeItem('civiceye_redirect');
+      window.location.href = dest;
+    }, delay);
+  }
+
+  // ── Show Success Screen ──
+  function showSuccess(title, msg) {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('googleBtn').style.display = 'none';
+    document.getElementById('switchText').style.display = 'none';
+    document.querySelector('.or-divider').style.display = 'none';
+    document.querySelector('.auth-tabs').style.display = 'none';
+    document.getElementById('successTitle').textContent = title;
+    document.getElementById('successMsg').textContent = msg;
+    document.getElementById('successScreen').style.display = 'block';
+  }
+
+  // ── LOGIN FORM ──
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    clearErrors();
+
+    const email    = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    let valid = true;
+
+    if (!isValidEmail(email)) { showErr('loginEmailErr', 'Please enter a valid email.'); valid = false; }
+    if (!password)             { showErr('loginPasswordErr', 'Please enter your password.'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('loginBtn');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    setTimeout(() => {
+      const users = getUsers();
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+      if (!user) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        showErr('loginEmailErr', 'No account found with this email. Please sign up first.');
+        return;
+      }
+      if (user.password !== btoa(password)) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        showErr('loginPasswordErr', 'Incorrect password. Please try again.');
+        return;
+      }
+
+      // ✅ Success
+      createSession(user);
+      showSuccess(`Welcome back, ${user.name.split(' ')[0]}! 👋`, 'Login successful. Redirecting you now...');
+      doRedirect(1200);
+    }, 900);
+  });
+
+  // ── SIGNUP FORM ──
+  document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    clearErrors();
+
+    const name     = document.getElementById('signupName').value.trim();
+    const email    = document.getElementById('signupEmail').value.trim();
+    const city     = document.getElementById('signupCity').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const terms    = document.getElementById('terms').checked;
+    let valid = true;
+
+    if (!name || name.length < 2)   { showErr('signupNameErr', 'Please enter your full name.'); valid = false; }
+    if (!isValidEmail(email))        { showErr('signupEmailErr', 'Please enter a valid email address.'); valid = false; }
+    if (password.length < 8)        { showErr('signupPasswordErr', 'Password must be at least 8 characters.'); valid = false; }
+    if (!terms)                     { alert('Please accept the Terms of Service to continue.'); valid = false; }
+    if (!valid) return;
+
+    const btn = document.getElementById('signupBtn');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    setTimeout(() => {
+      const users = getUsers();
+
+      if (users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+        btn.classList.remove('loading'); btn.disabled = false;
+        showErr('signupEmailErr', 'This email is already registered. Please sign in instead.');
+        return;
+      }
+
+      // Create new user
+      const newUser = {
+        uid:        'u_' + Date.now(),
+        name,
+        email,
+        city:       city || 'India',
+        password:   btoa(password),   // base64-encoded (demo only)
+        badge:      'beginner',
+        trustScore: 30,
+        totalComplaints: 0,
+        resolvedComplaints: 0,
+        joinDate:   new Date().toLocaleDateString('en-IN', { month:'long', year:'numeric' }),
+        createdAt:  Date.now()
+      };
+
+      users.push(newUser);
+      saveUsers(users);
+      createSession(newUser);
+
+      showSuccess(`Account created, ${name.split(' ')[0]}! 🎉`, 'You\'re all set. Redirecting you now...');
+      doRedirect(1200);
+    }, 1000);
+  });
+
+  // ── GOOGLE (Simulated) ──
+  function handleGoogle() {
+    const btn = document.getElementById('googleBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner" style="border-color:rgba(0,0,0,0.2);border-top-color:#4F46E5;width:18px;height:18px;"></div> Connecting to Google...`;
+
+    setTimeout(() => {
+      // Create a Google demo user
+      const gUser = {
+        uid: 'google_' + Date.now(),
+        name: 'Google User',
+        email: 'googleuser@gmail.com',
+        city: 'Chandigarh',
+        password: '',
+        badge: 'beginner',
+        trustScore: 30,
+        totalComplaints: 0,
+        resolvedComplaints: 0,
+        joinDate: new Date().toLocaleDateString('en-IN', {month:'long', year:'numeric'}),
+        createdAt: Date.now()
+      };
+
+      const users = getUsers();
+      if (!users.find(u => u.email === gUser.email)) {
+        users.push(gUser);
+        saveUsers(users);
+      }
+
+      createSession(gUser);
+      showSuccess('Signed in with Google! 🎉', 'Redirecting you now...');
+      doRedirect(1000);
+    }, 1200);
+  }
+
+  // ── FORGOT PASSWORD ──
+  function forgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    if (!isValidEmail(email)) {
+      showErr('loginEmailErr', 'Enter your email above first, then click Forgot password.');
+      return;
+    }
+    const users = getUsers();
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (user) {
+      alert(`Password reset link sent to ${email}.\n\nFor this demo, your password is stored locally.\nUser: ${user.name}`);
+    } else {
+      showErr('loginEmailErr', 'No account found with this email address.');
+    }
+  }
+
+  // ── Dark mode on auth page ──
+  document.getElementById('darkToggleAuth').addEventListener('click', function() {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('civiceye-theme', next);
+    this.textContent = next === 'dark' ? '☀️' : '🌙';
+  });
+
+  // Init dark mode
+  const savedTheme = localStorage.getItem('civiceye-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.getElementById('darkToggleAuth').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+  // Check if already logged in
+  if (localStorage.getItem('civiceye_user_session')) {
+    const dest = localStorage.getItem('civiceye_redirect') || 'index.html';
+    localStorage.removeItem('civiceye_redirect');
+    window.location.href = dest;
+  }
+
+  // Check URL for ?tab=signup
+  if (new URLSearchParams(location.search).get('tab') === 'signup') {
+    switchTab('signup');
+  }
+</script>
+</body>
+</html>
