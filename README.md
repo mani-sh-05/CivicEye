@@ -58,13 +58,11 @@ The platform provides a public dashboard with real-time insights, including:
 
 ## Tech Stack
 
-(Modify this section according to your implementation)
-
-- Frontend: HTML, CSS, JavaScript or React
-- Backend: Node.js or Python
-- Database: Firebase or MongoDB
+- Frontend: HTML, CSS, JavaScript  
+- Backend: Node.js  
+- Database: Firebase  
 - APIs: Geolocation and image upload services
-- Authentication: Firebase Auth or JWT
+- Authentication: Firebase Auth  
 
 ---
 
@@ -80,12 +78,6 @@ The platform provides a public dashboard with real-time insights, including:
 ## Contributing
 
 Contributions are welcome. Fork the repository and submit a pull request for review.
-
----
-
-## License
-
-This project is licensed under the MIT License.
 
 ---
 
