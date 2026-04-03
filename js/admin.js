@@ -1,14 +1,5 @@
 // js/admin.js
-import { db } from './firebase-config.js';
 import { enforceAdminRoute } from './auth.js';
-import { 
-    collection, 
-    query, 
-    where, 
-    onSnapshot, 
-    doc, 
-    updateDoc 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // First enforce that only admins see this page
 enforceAdminRoute();
@@ -20,20 +11,26 @@ window.initializeAdminDashboard = (category) => {
     currentCategory = category || "General";
     console.log("Admin initialized for category:", currentCategory);
     
-    const q = query(collection(db, "reports"), where("category", "==", currentCategory));
-    
-    // Real-time listener
-    onSnapshot(q, (snapshot) => {
-        liveIssues = [];
-        snapshot.forEach((docSnap) => {
-            liveIssues.push({ id: docSnap.id, ...docSnap.data() });
-        });
+    function fetchLocal() {
+        if (window.ComplaintsDB) {
+            liveIssues = window.ComplaintsDB.get();
+        } else {
+            liveIssues = JSON.parse(localStorage.getItem('civic_complaints') || '[]');
+        }
         
-        // Ensure UI functions exist before calling them
+        // Filter by category if needed
+        if (currentCategory !== "General" && currentCategory !== "All") {
+            liveIssues = liveIssues.filter(i => i.category === currentCategory);
+        }
+
         if (typeof window.refreshUI === 'function') {
             window.refreshUI(liveIssues);
         }
-    });
+    }
+    
+    // Initial fetch and poll to simulate real-time updates
+    fetchLocal();
+    setInterval(fetchLocal, 1500);
 };
 
 window.getIssues = () => {
@@ -43,8 +40,13 @@ window.getIssues = () => {
 // Update issue status to In Progress
 window.markProgress = async (id) => {
     try {
-        const issueRef = doc(db, "reports", id);
-        await updateDoc(issueRef, { status: "In Progress" });
+        if (window.ComplaintsDB) {
+            window.ComplaintsDB.update(id, { status: "In Progress" });
+        } else {
+            const data = JSON.parse(localStorage.getItem('civic_complaints') || '[]');
+            const updated = data.map(i => i.id === id ? { ...i, status: "In Progress" } : i);
+            localStorage.setItem('civic_complaints', JSON.stringify(updated));
+        }
         if (typeof toast !== 'undefined') toast('🔄 Status Updated', 'Issue marked as In Progress', 'info');
     } catch (e) {
         console.error("Error updating status: ", e);
@@ -54,13 +56,19 @@ window.markProgress = async (id) => {
 // Resolve an issue with an after image
 window.submitResolution = async (id, afterDataURL, resolveComment) => {
     try {
-        const issueRef = doc(db, "reports", id);
-        await updateDoc(issueRef, { 
+        const payload = { 
             status: "Resolved",
             afterImage: afterDataURL,
             resolveComment: resolveComment || "Resolution confirmed by admin",
             resolvedAt: new Date().toISOString()
-        });
+        };
+        if (window.ComplaintsDB) {
+            window.ComplaintsDB.update(id, payload);
+        } else {
+            const data = JSON.parse(localStorage.getItem('civic_complaints') || '[]');
+            const updated = data.map(i => i.id === id ? { ...i, ...payload } : i);
+            localStorage.setItem('civic_complaints', JSON.stringify(updated));
+        }
         if (typeof toast !== 'undefined') toast('✅ Issue Resolved!', 'Proof of resolution saved.', 'success');
     } catch (e) {
         console.error("Error submitting resolution: ", e);

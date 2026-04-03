@@ -64,6 +64,9 @@ const Toast = {
   info(title, msg) { this.show(title, msg, 'info'); }
 };
 
+// Expose globally for inline scripts
+window.Toast = Toast;
+
 // Scroll Animations
 const ScrollReveal = {
   init() {
@@ -276,10 +279,39 @@ const SampleComplaints = [
     votes: 61,
     date: '2026-03-25',
     image: null,
+    beforeImage: null,
     userId: 'user005',
-    userName: 'Vikram Rao'
+    reporter: 'Vikram Rao',
+    userName: 'Vikram Rao',
+    aiScore: 89
   }
 ];
+
+const ComplaintsDB = {
+  get() {
+    const stored = localStorage.getItem('civic_complaints');
+    return stored ? JSON.parse(stored) : SampleComplaints;
+  },
+  save(data) {
+    localStorage.setItem('civic_complaints', JSON.stringify(data));
+  },
+  add(issue) {
+    const data = this.get();
+    data.unshift(issue);
+    this.save(data);
+  },
+  update(id, updates) {
+    let data = this.get();
+    data = data.map(i => i.id === id ? { ...i, ...updates } : i);
+    this.save(data);
+  }
+};
+// Initialize on load if empty
+if (!localStorage.getItem('civic_complaints')) {
+  ComplaintsDB.save(SampleComplaints);
+}
+window.ComplaintsDB = ComplaintsDB;
+window.SampleComplaints = SampleComplaints;
 
 // User Profile Data (demo)
 let currentUser = {
