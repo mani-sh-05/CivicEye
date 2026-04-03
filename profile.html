@@ -632,9 +632,11 @@
 
   // ─── Reports Table ───────────────────────────────────
   function loadUserReports(user) {
-    const all = JSON.parse(localStorage.getItem('civiceye_issues') || '[]');
+    const all = window.ComplaintsDB ? window.ComplaintsDB.get() : JSON.parse(localStorage.getItem('civic_complaints') || '[]');
     userReports = all.filter(r => {
-      return r.reporterUid === user.uid ||
+      return r.userId === user.uid ||
+             r.userId === 'user001' || // fallback for mock
+             r.reporterUid === user.uid ||
              r.reporterEmail === user.email ||
              (r.reporter && r.reporter === (user.displayName || user.email));
     });
