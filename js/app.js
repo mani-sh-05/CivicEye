@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 3. Update Navbars natively
-    updateAuthUI(isLoggedIn);
+    updateAuthUI(isLoggedIn, user);
   });
 
   // Handle Logout globally via Firebase
@@ -392,7 +392,32 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Auth UI Toggle (Dynamic Navbar)
-  function updateAuthUI(isLoggedIn) {
+  function updateAuthUI(isLoggedIn, user) {
+    // ── Navbar Avatar ─────────────────────────────────────
+    document.querySelectorAll('.nav-avatar').forEach(av => {
+      if (isLoggedIn && user) {
+        const name    = user.displayName || user.email || '?';
+        const initial = name.charAt(0).toUpperCase();
+        if (user.photoURL) {
+          av.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="${initial}" onerror="this.parentNode.textContent='${initial}'"/>`;
+          av.style.padding  = '0';
+          av.style.overflow = 'hidden';
+        } else {
+          av.textContent    = initial;
+          av.style.padding  = '';
+          av.style.overflow = '';
+        }
+        av.setAttribute('href', 'profile.html');
+        av.title      = `My Profile (${user.email})`;
+        av.style.cursor = 'pointer';
+      } else {
+        av.textContent = '?';
+        av.setAttribute('href', 'auth.html');
+        av.title  = 'Login';
+      }
+      av.style.display = isLoggedIn ? 'flex' : 'none';
+    });
+
     // Handle Desktop Nav Actions
     document.querySelectorAll('.nav-actions').forEach(nav => {
       // Login button

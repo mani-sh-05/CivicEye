@@ -12,6 +12,17 @@ import {
   getDoc 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Redirect already-logged-in users away from auth page
+const authPagePath = window.location.pathname.split('/').pop();
+if (authPagePath === 'auth.html') {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.href = 'profile.html';
+    }
+  });
+}
+
+
 // Make signOut available globally for the navbar and dashboards
 window.logout = async () => {
     try {
@@ -53,7 +64,7 @@ if (loginForm) {
           if (data.role === 'admin') {
             window.location.href = 'admin-panel.html';
           } else {
-            window.location.href = 'index.html';
+            window.location.href = 'profile.html';
           }
         }, 1000);
       } else {
